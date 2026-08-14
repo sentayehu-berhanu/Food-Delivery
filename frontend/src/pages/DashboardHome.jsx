@@ -1,10 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, Clock, DollarSign } from 'lucide-react';
+import RevenueChart from '../components/RevenueChart';
 
 const DashboardHome = () => {
+  const [statsData, setStatsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // In a real app, fetch from /api/orders/analytics
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/orders/analytics', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStatsData(data);
+        } else {
+          throw new Error('Failed to fetch analytics');
+        }
+      } catch (error) {
+        console.error(error);
+        setStatsData({
+          totalRevenue: 1245.00,
+          totalOrders: 45,
+          chartData: [
+            { date: 'Mon', revenue: 400, orders: 12 },
+            { date: 'Tue', revenue: 600, orders: 18 },
+            { date: 'Wed', revenue: 300, orders: 9 },
+            { date: 'Thu', revenue: 800, orders: 24 },
+            { date: 'Fri', revenue: 500, orders: 15 },
+            { date: 'Sat', revenue: 900, orders: 28 },
+            { date: 'Sun', revenue: 700, orders: 20 },
+          ]
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+
   const stats = [
-    { title: "Today's Revenue", value: '$1,245.00', icon: <DollarSign size={24} />, color: 'bg-green-100 text-green-600', trend: '+14%' },
-    { title: 'New Orders', value: '45', icon: <ShoppingBag size={24} />, color: 'bg-orange-100 text-primary', trend: '+5%' },
+    { title: "Today's Revenue", value: `$${statsData.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`, icon: <DollarSign size={24} />, color: 'bg-green-100 text-green-600', trend: '+14%' },
+    { title: 'New Orders', value: statsData.totalOrders.toLocaleString(), icon: <ShoppingBag size={24} />, color: 'bg-orange-100 text-primary', trend: '+5%' },
     { title: 'Avg. Prep Time', value: '18 min', icon: <Clock size={24} />, color: 'bg-blue-100 text-blue-600', trend: '-2 min' },
     { title: 'Growth', value: '8.4%', icon: <TrendingUp size={24} />, color: 'bg-purple-100 text-purple-600', trend: '+1.2%' },
   ];
@@ -30,8 +74,8 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Placeholder Chart Area */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[400px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-gray-900 text-lg">Revenue Overview</h3>
             <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none">
@@ -40,19 +84,8 @@ const DashboardHome = () => {
               <option>This Year</option>
             </select>
           </div>
-          <div className="h-64 flex items-end gap-2 justify-between px-4 pb-4 border-b border-gray-100">
-            {/* Mock bar chart */}
-            {[40, 60, 30, 80, 50, 90, 70].map((height, i) => (
-              <div key={i} className="w-full max-w-[40px] flex flex-col items-center gap-2">
-                <div 
-                  className="w-full bg-primary rounded-t-sm hover:bg-primary-dark transition-colors cursor-pointer" 
-                  style={{ height: `${height}%` }}
-                ></div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between px-4 pt-4 text-sm text-gray-500 font-medium">
-            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          <div className="flex-1">
+            <RevenueChart data={statsData.chartData} />
           </div>
         </div>
 

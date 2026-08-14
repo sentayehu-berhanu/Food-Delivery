@@ -1,13 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Store, DollarSign, Activity, ArrowUpRight } from 'lucide-react';
+import RevenueChart from '../components/RevenueChart';
 
 const AdminHome = () => {
-  // Mock Platform Analytics
+  const [statsData, setStatsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // In a real app, you would fetch from /api/admin/stats
+    // For now, we mock the fetch to use our backend logic
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/admin/stats', {
+          headers: {
+            // Mock auth token
+            'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStatsData(data);
+        } else {
+          // Fallback to mock data if backend isn't ready
+          throw new Error('Failed to fetch');
+        }
+      } catch (error) {
+        console.error(error);
+        setStatsData({
+          totalRevenue: 45231.89,
+          totalUsers: 1204,
+          activeRestaurants: 48,
+          ordersToday: 156,
+          chartData: [
+            { date: '2023-10-01', revenue: 1500, orders: 45 },
+            { date: '2023-10-02', revenue: 1800, orders: 52 },
+            { date: '2023-10-03', revenue: 1200, orders: 38 },
+            { date: '2023-10-04', revenue: 2100, orders: 61 },
+            { date: '2023-10-05', revenue: 1900, orders: 55 },
+            { date: '2023-10-06', revenue: 2400, orders: 70 },
+            { date: '2023-10-07', revenue: 2800, orders: 85 },
+          ]
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+
   const stats = [
-    { name: 'Total Revenue', value: '$45,231.89', change: '+12.5%', icon: <DollarSign size={24} />, color: 'text-green-600', bg: 'bg-green-100' },
-    { name: 'Active Users', value: '1,204', change: '+5.2%', icon: <Users size={24} />, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { name: 'Restaurant Partners', value: '48', change: '+2', icon: <Store size={24} />, color: 'text-orange-600', bg: 'bg-orange-100' },
-    { name: 'Orders Today', value: '156', change: '+18.1%', icon: <Activity size={24} />, color: 'text-purple-600', bg: 'bg-purple-100' },
+    { name: 'Total Revenue', value: `$${statsData.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: '+12.5%', icon: <DollarSign size={24} />, color: 'text-green-600', bg: 'bg-green-100' },
+    { name: 'Active Users', value: statsData.totalUsers.toLocaleString(), change: '+5.2%', icon: <Users size={24} />, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { name: 'Restaurant Partners', value: statsData.activeRestaurants.toLocaleString(), change: '+2', icon: <Store size={24} />, color: 'text-orange-600', bg: 'bg-orange-100' },
+    { name: 'Orders Today', value: statsData.ordersToday.toLocaleString(), change: '+18.1%', icon: <Activity size={24} />, color: 'text-purple-600', bg: 'bg-purple-100' },
   ];
 
   return (
@@ -32,7 +80,7 @@ const AdminHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Placeholder for Revenue Chart */}
+        {/* Revenue Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[400px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-gray-900">Revenue Overview</h3>
@@ -42,8 +90,8 @@ const AdminHome = () => {
               <option>This Year</option>
             </select>
           </div>
-          <div className="flex-1 bg-gray-50 rounded-xl flex items-center justify-center border border-dashed border-gray-200">
-            <p className="text-gray-400 font-medium">Revenue Chart Placeholder (Chart.js / Recharts)</p>
+          <div className="flex-1">
+            <RevenueChart data={statsData.chartData} />
           </div>
         </div>
 

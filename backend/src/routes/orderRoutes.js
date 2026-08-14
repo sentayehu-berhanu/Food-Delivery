@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getRestaurantOrders, updateOrderStatus, getAvailableOrders, assignDriver, createOrder } = require('../controllers/orderController');
+const { getRestaurantOrders, updateOrderStatus, getAvailableOrders, assignDriver, createOrder, getRestaurantAnalytics } = require('../controllers/orderController');
 const { protect, restaurantOwner, driver } = require('../middleware/authMiddleware');
+
+// Analytics Route
+router.get('/analytics', protect, getRestaurantAnalytics);
 
 // Create a new order
 router.post('/', createOrder);

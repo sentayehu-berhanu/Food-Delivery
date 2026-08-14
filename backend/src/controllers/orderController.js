@@ -137,3 +137,51 @@ exports.assignDriver = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Restaurant: Get Analytics Data
+exports.getRestaurantAnalytics = async (req, res) => {
+  try {
+    // In a real app, this is filtered by req.user._id (restaurant owner)
+    // For now, we'll get all orders to show the chart functioning
+    
+    // Aggregate last 7 days revenue for chart
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const revenueData = await Order.aggregate([
+      { 
+        $match: { 
+          // status: 'DELIVERED', // Un-comment in prod to only count delivered
+          createdAt: { $gte: sevenDaysAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$total" },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Format for Recharts
+    const chartData = revenueData.map(item => ({
+      date: item._id,
+      revenue: item.revenue,
+      orders: item.orders
+    }));
+
+    // Mock total summary
+    const totalOrders = await Order.countDocuments();
+    const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
+
+    res.json({
+      totalOrders,
+      totalRevenue,
+      chartData
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

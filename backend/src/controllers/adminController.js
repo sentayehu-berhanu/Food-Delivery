@@ -15,11 +15,40 @@ exports.getPlatformStats = async (req, res) => {
     const completedOrders = await Order.find({ status: 'DELIVERED' });
     const totalRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
 
+    // Aggregate last 7 days revenue for chart
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const revenueData = await Order.aggregate([
+      { 
+        $match: { 
+          status: 'DELIVERED',
+          createdAt: { $gte: sevenDaysAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$total" },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Format for Recharts: [{ date: '2023-10-01', revenue: 150 }, ...]
+    const chartData = revenueData.map(item => ({
+      date: item._id,
+      revenue: item.revenue,
+      orders: item.orders
+    }));
+
     res.json({
       totalUsers,
       activeRestaurants,
       ordersToday,
-      totalRevenue
+      totalRevenue,
+      chartData // Added chart data
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
