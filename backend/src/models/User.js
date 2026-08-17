@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['CUSTOMER', 'RESTAURANT', 'DRIVER', 'ADMIN'], default: 'CUSTOMER' },
+  status: { type: String, enum: ['ACTIVE', 'BANNED'], default: 'ACTIVE' },
   phone: { type: String },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' }]
 }, { timestamps: true });

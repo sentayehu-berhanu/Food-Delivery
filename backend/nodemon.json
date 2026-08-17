@@ -1,0 +1,3 @@
+{
+  "ignore": ["*.json", "users_db.json"]
+}

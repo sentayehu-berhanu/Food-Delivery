@@ -5,33 +5,27 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('foodgo_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [token, setToken] = useState(localStorage.getItem('foodgo_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // In a real app, you would validate the token with the backend on load
   useEffect(() => {
-    if (token) {
-      // Mocking user profile load from token
-      // In Phase 3, we'll replace this with a real API call if time permits
-      setUser({
-        id: '1',
-        name: 'Test User',
-        email: 'test@example.com',
-        role: 'CUSTOMER'
-      });
-    }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   const login = (newToken, userData) => {
     localStorage.setItem('foodgo_token', newToken);
+    localStorage.setItem('foodgo_user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('foodgo_token');
+    localStorage.removeItem('foodgo_user');
     setToken(null);
     setUser(null);
   };

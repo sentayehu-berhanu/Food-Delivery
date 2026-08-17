@@ -12,6 +12,7 @@ import RestaurantLayout from './components/RestaurantLayout';
 import DashboardHome from './pages/DashboardHome';
 import DashboardOrders from './pages/DashboardOrders';
 import DashboardMenu from './pages/DashboardMenu';
+import DashboardSettings from './pages/DashboardSettings';
 import DriverLayout from './components/DriverLayout';
 import DriverHome from './pages/DriverHome';
 import DriverActiveOrder from './pages/DriverActiveOrder';
@@ -51,7 +52,7 @@ function App() {
           <Route index element={<DashboardHome />} />
           <Route path="orders" element={<DashboardOrders />} />
           <Route path="menu" element={<DashboardMenu />} />
-          <Route path="settings" element={<div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100">Settings Page Coming Soon</div>} />
+          <Route path="settings" element={<DashboardSettings />} />
         </Route>
 
         {/* Driver Dashboard Routes */}

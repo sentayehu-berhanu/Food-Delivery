@@ -5,13 +5,14 @@ import RevenueChart from '../components/RevenueChart';
 const AdminHome = () => {
   const [statsData, setStatsData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showAllActivity, setShowAllActivity] = useState(false);
 
   useEffect(() => {
     // In a real app, you would fetch from /api/admin/stats
     // For now, we mock the fetch to use our backend logic
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/admin/stats', {
+        const response = await fetch('http://localhost:5000/api/admin/stats', {
           headers: {
             // Mock auth token
             'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
@@ -98,8 +99,8 @@ const AdminHome = () => {
         {/* Recent Activity Feed */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <h3 className="font-bold text-gray-900 mb-6">Recent Activity</h3>
-          <div className="space-y-6">
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className={`space-y-6 ${showAllActivity ? 'max-h-[300px] overflow-y-auto pr-2' : ''}`}>
+            {(showAllActivity ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : [1, 2, 3, 4, 5]).map((i) => (
               <div key={i} className="flex gap-4">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0"></div>
                 <div>
@@ -109,8 +110,11 @@ const AdminHome = () => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-2 bg-gray-50 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-100 transition">
-            View All Activity
+          <button 
+            onClick={() => setShowAllActivity(!showAllActivity)}
+            className="w-full mt-6 py-2 bg-gray-50 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-100 transition"
+          >
+            {showAllActivity ? 'Show Less' : 'View All Activity'}
           </button>
         </div>
       </div>

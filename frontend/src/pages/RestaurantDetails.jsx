@@ -85,13 +85,60 @@ const MOCK_MENU = [
 
 const RestaurantDetails = () => {
   const { id } = useParams();
-  const [activeCategory, setActiveCategory] = useState('Popular');
+  const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
+  const [restaurant, setRestaurant] = useState(MOCK_RESTAURANT);
+  const [menuItems, setMenuItems] = useState(MOCK_MENU);
+  
   const headerRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    // Load restaurant details from localStorage if available
+    const adminSaved = localStorage.getItem('mockRestaurants');
+    if (adminSaved) {
+      const parsed = JSON.parse(adminSaved);
+      const found = parsed.find(r => r.id.toString() === id?.toString());
+      if (found) {
+        setRestaurant({
+          id: found.id,
+          name: found.name,
+          rating: (4.0 + Math.random()).toFixed(1),
+          time: '30-45 min',
+          tags: 'New Partner',
+          priceLevel: '$$',
+          image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80',
+          categories: ['Popular', 'Burgers', 'Pizza', 'Appetizers', 'Drinks', 'Desserts'],
+          address: '123 Partner Lane',
+          phone: '(555) 123-4567',
+          email: 'contact@partner.com'
+        });
+      }
+    }
+
+    // Load menu items from partner dashboard localStorage
+    const savedMenu = localStorage.getItem('mockMenuItems');
+    if (savedMenu) {
+      const parsedMenu = JSON.parse(savedMenu);
+      const formattedMenu = parsedMenu.map(m => ({
+        id: m.id,
+        category: m.category || 'Popular',
+        name: m.name,
+        description: 'Freshly prepared daily.',
+        price: m.price,
+        image: m.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500',
+        sizes: [],
+        toppings: [],
+        sauces: []
+      }));
+      if (formattedMenu.length > 0) {
+        setMenuItems(formattedMenu);
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     // Page load animations
@@ -104,7 +151,7 @@ const RestaurantDetails = () => {
       { opacity: 0, y: 20 }, 
       { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 0.3, ease: 'power3.out' }
     );
-  }, []);
+  }, [menuItems]);
 
   const { addToCart } = useCart();
   const { user } = useAuth();
@@ -123,7 +170,7 @@ const RestaurantDetails = () => {
     console.log('Added to cart:', cartItem);
   };
 
-  const filteredMenu = MOCK_MENU.filter(item => {
+  const filteredMenu = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
     return matchesSearch && (searchQuery ? true : matchesCategory); // If searching, ignore category filter
@@ -135,8 +182,8 @@ const RestaurantDetails = () => {
       <div ref={headerRef} className="bg-white">
         <div className="h-64 md:h-80 w-full relative">
           <img 
-            src={MOCK_RESTAURANT.image} 
-            alt={MOCK_RESTAURANT.name} 
+            src={restaurant.image} 
+            alt={restaurant.name} 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -145,20 +192,20 @@ const RestaurantDetails = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-16">
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">{MOCK_RESTAURANT.name}</h1>
-              <p className="text-gray-500 mb-4">{MOCK_RESTAURANT.tags}</p>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">{restaurant.name}</h1>
+              <p className="text-gray-500 mb-4">{restaurant.tags}</p>
               
               <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg">
                   <Star size={16} className="fill-yellow-500 text-yellow-500" />
-                  <span>{MOCK_RESTAURANT.rating} (500+ ratings)</span>
+                  <span>{restaurant.rating} (500+ ratings)</span>
                 </div>
                 <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg">
                   <Clock size={16} className="text-gray-500" />
-                  <span>{MOCK_RESTAURANT.time}</span>
+                  <span>{restaurant.time}</span>
                 </div>
                 <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg">
-                  <span className="text-gray-500">{MOCK_RESTAURANT.priceLevel}</span>
+                  <span className="text-gray-500">{restaurant.priceLevel}</span>
                 </div>
               </div>
             </div>
@@ -202,7 +249,7 @@ const RestaurantDetails = () => {
                 >
                   All Items
                 </button>
-                {MOCK_RESTAURANT.categories.map(cat => (
+                {restaurant.categories.map(cat => (
                   <button 
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
@@ -253,7 +300,7 @@ const RestaurantDetails = () => {
       <RestaurantInfoModal 
         isOpen={isInfoModalOpen}
         onClose={() => setIsInfoModalOpen(false)}
-        restaurant={MOCK_RESTAURANT}
+        restaurant={restaurant}
       />
     </div>
   );

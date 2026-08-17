@@ -1,6 +1,18 @@
-const User = require('../models/User');
 const Restaurant = require('../models/Restaurant');
 const Order = require('../models/Order');
+const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
+const dbPath = path.join(__dirname, '..', '..', 'users_db.json');
+
+// Helper to read/write JSON DB
+const readDB = () => {
+  if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(dbPath, JSON.stringify([]));
+  }
+  return JSON.parse(fs.readFileSync(dbPath));
+};
+const writeDB = (data) => fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
 
 // Get Platform Stats
 exports.getPlatformStats = async (req, res) => {
@@ -58,8 +70,8 @@ exports.getPlatformStats = async (req, res) => {
 // Get All Users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
-    res.json(users);
+    const users = readDB();
+    res.json(users.reverse());
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -70,6 +82,73 @@ exports.getAllRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find().populate('owner', 'name email').sort({ createdAt: -1 });
     res.json(restaurants);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Create User (Admin)
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, role, status } = req.body;
+    let users = readDB();
+    
+    if (users.find(u => u.email === email)) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const newUser = {
+      _id: Date.now().toString(),
+      name,
+      email,
+      role: role || 'CUSTOMER',
+      status: status || 'ACTIVE',
+      createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    writeDB(users);
+
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update User (Admin)
+exports.updateUser = async (req, res) => {
+  try {
+    let users = readDB();
+    const index = users.findIndex(u => u._id === req.params.id);
+
+    if (index !== -1) {
+      users[index].name = req.body.name || users[index].name;
+      users[index].email = req.body.email || users[index].email;
+      users[index].role = req.body.role || users[index].role;
+      users[index].status = req.body.status || users[index].status;
+
+      writeDB(users);
+      res.json(users[index]);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete User (Admin)
+exports.deleteUser = async (req, res) => {
+  try {
+    let users = readDB();
+    const filtered = users.filter(u => u._id !== req.params.id);
+    
+    if (users.length !== filtered.length) {
+      writeDB(filtered);
+      res.json({ message: 'User removed' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -18,10 +18,10 @@ const CATEGORIES = [
   { icon: '🍗', name: 'Chicken' }
 ];
 
-const RESTAURANTS = [
-  { id: 1, name: 'Pizza House', rating: 4.8, time: '25-35 min', tags: 'Italian • Pizza', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60' },
-  { id: 2, name: 'Burger Joint', rating: 4.6, time: '30-40 min', tags: 'American • Fast Food', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
-  { id: 3, name: 'Sushi Master', rating: 4.9, time: '20-30 min', tags: 'Japanese • Sushi', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=500&auto=format&fit=crop&q=60' },
+const DEFAULT_RESTAURANTS = [
+  { id: '1', name: 'Pizza House', rating: 4.8, time: '25-35 min', tags: 'Italian • Pizza', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60' },
+  { id: '2', name: 'Burger Joint', rating: 4.6, time: '30-40 min', tags: 'American • Fast Food', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+  { id: '3', name: 'Sushi Master', rating: 4.9, time: '20-30 min', tags: 'Japanese • Sushi', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=500&auto=format&fit=crop&q=60' },
 ];
 
 const Home = () => {
@@ -39,7 +39,35 @@ const Home = () => {
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get('search') || '';
 
-  const filteredRestaurants = RESTAURANTS.filter(r => 
+  const [restaurants, setRestaurants] = useState(() => {
+    const adminSaved = localStorage.getItem('mockRestaurants');
+    if (adminSaved) {
+      const parsedAdminRestaurants = JSON.parse(adminSaved);
+      // Only show approved restaurants on the main website
+      const approvedRestaurants = parsedAdminRestaurants.filter(r => r.status === 'APPROVED');
+      
+      return approvedRestaurants.map(adminRest => {
+        // Check if it's one of our original default restaurants so we can keep its nice image and tags
+        const original = DEFAULT_RESTAURANTS.find(orig => orig.name === adminRest.name);
+        if (original) {
+          return { ...original, id: adminRest.id };
+        }
+        
+        // For entirely new restaurants added by the admin, give them some default values
+        return {
+          id: adminRest.id,
+          name: adminRest.name,
+          rating: (4.0 + Math.random()).toFixed(1),
+          time: '30-45 min',
+          tags: 'New Partner',
+          image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=60' // generic restaurant interior
+        };
+      });
+    }
+    return DEFAULT_RESTAURANTS;
+  });
+
+  const filteredRestaurants = restaurants.filter(r => 
     r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     r.tags.toLowerCase().includes(searchQuery.toLowerCase())
   );

@@ -22,21 +22,46 @@ const Login = () => {
     e.preventDefault();
     setError('');
     
-    // Phase 3 mock login logic
-    if (email && password) {
-      // Mock successful login
-      const mockToken = 'mock-jwt-token-12345';
-      const mockUser = {
-        id: '1',
-        name: 'Demo User',
-        email,
-        role: 'CUSTOMER'
-      };
-      
-      login(mockToken, mockUser);
-      navigate('/');
-    } else {
+    if (!email || !password) {
       setError('Please enter email and password');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login(data.token, {
+          id: data._id,
+          name: data.name,
+          email: data.email,
+          role: data.role
+        });
+        
+        // Redirect based on role
+        if (data.role === 'ADMIN') {
+          navigate('/admin-dashboard');
+        } else if (data.role === 'RESTAURANT') {
+          navigate('/restaurant-dashboard');
+        } else if (data.role === 'DRIVER') {
+          navigate('/driver-dashboard');
+        } else {
+          navigate('/');
+        }
+      } else {
+        setError(data.message || 'Invalid email or password');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Failed to connect to the server. Please check your connection.');
     }
   };
 

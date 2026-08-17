@@ -32,14 +32,17 @@ app.get('/', (req, res) => {
 });
 
 // Database Connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error('Error connecting to MongoDB:', error.message);
+  } catch (error) {
+    console.log('Local MongoDB not found. Running in mock-DB mode for users...');
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
+};
+
+startServer();
