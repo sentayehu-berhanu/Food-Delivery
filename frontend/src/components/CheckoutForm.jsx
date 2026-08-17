@@ -10,6 +10,7 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
   const navigate = useNavigate();
   const { clearCart, cartItems } = useCart();
   const [error, setError] = useState(null);
+  const [isCardEmpty, setIsCardEmpty] = useState(true);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -22,6 +23,14 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
     setError(null);
 
     try {
+      // For this mock phase, we just want to ensure they typed *something*
+      // without forcing them to know the exact Stripe test cards.
+      if (isCardEmpty) {
+        setError('Please enter your card details.');
+        setIsProcessing(false);
+        return;
+      }
+
       // 1. Fetch PaymentIntent from backend
       // In a real app, you would make this fetch call. Since we are mocking without real keys,
       // I've commented out the actual fetch and simulated a success flow for the UI.
@@ -50,9 +59,10 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
 
       // 3. Save order to backend (Simulated)
       setTimeout(() => {
-        clearCart();
-        setIsProcessing(false);
-        navigate('/orders', { state: { message: 'Payment successful! Your order has been placed.' } });
+        navigate('/orders', { state: { message: `Payment successful! You paid $${total.toFixed(2)}.` } });
+        setTimeout(() => {
+          clearCart();
+        }, 100);
       }, 2000);
 
     } catch (err) {
@@ -88,7 +98,13 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
           Secure Card Payment
         </div>
         <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <CardElement options={cardElementOptions} />
+          <CardElement 
+            options={cardElementOptions} 
+            onChange={(e) => {
+              setIsCardEmpty(e.empty);
+              if (error) setError(null);
+            }} 
+          />
         </div>
         {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
       </div>

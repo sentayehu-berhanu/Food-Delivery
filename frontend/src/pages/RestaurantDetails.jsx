@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { Star, Clock, Info, Search, Filter } from 'lucide-react';
 import FoodCard from '../components/FoodCard';
 import FoodModal from '../components/FoodModal';
+import RestaurantInfoModal from '../components/RestaurantInfoModal';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 // Mock Data for Phase 2
 const MOCK_RESTAURANT = {
@@ -14,7 +17,10 @@ const MOCK_RESTAURANT = {
   tags: 'Italian • Pizza • Fast Food',
   priceLevel: '$$',
   image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&auto=format&fit=crop&q=80',
-  categories: ['Popular', 'Pizzas', 'Sides', 'Drinks']
+  categories: ['Popular', 'Pizzas', 'Sides', 'Drinks'],
+  address: '456 Pizza Lane, Food City, FC 12345',
+  phone: '+1 (555) 987-6543',
+  email: 'hello@pizzahouse.com'
 };
 
 const MOCK_MENU = [
@@ -82,6 +88,7 @@ const RestaurantDetails = () => {
   const [activeCategory, setActiveCategory] = useState('Popular');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState(null);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
   const headerRef = useRef(null);
   const menuRef = useRef(null);
@@ -99,13 +106,21 @@ const RestaurantDetails = () => {
     );
   }, []);
 
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const handleFoodClick = (food) => {
     setSelectedFood(food);
   };
 
   const handleAddToCart = (cartItem) => {
+    if (!user) {
+      navigate('/login', { state: { message: 'Please log in to add items to your cart.' } });
+      return;
+    }
+    addToCart(cartItem);
     console.log('Added to cart:', cartItem);
-    // In Phase 3, this will dispatch to a CartContext or Redux store
   };
 
   const filteredMenu = MOCK_MENU.filter(item => {
@@ -148,7 +163,10 @@ const RestaurantDetails = () => {
               </div>
             </div>
             
-            <button className="flex items-center gap-2 text-primary font-bold hover:bg-orange-50 px-4 py-2 rounded-xl transition">
+            <button 
+              onClick={() => setIsInfoModalOpen(true)}
+              className="flex items-center gap-2 text-primary font-bold hover:bg-orange-50 px-4 py-2 rounded-xl transition"
+            >
               <Info size={20} />
               More Info
             </button>
@@ -230,6 +248,13 @@ const RestaurantDetails = () => {
           onAddToCart={handleAddToCart}
         />
       )}
+
+      {/* Restaurant Info Modal */}
+      <RestaurantInfoModal 
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+        restaurant={MOCK_RESTAURANT}
+      />
     </div>
   );
 };

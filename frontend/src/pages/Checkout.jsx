@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -21,8 +21,13 @@ const Checkout = () => {
   const [instructions, setInstructions] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (cartItems.length === 0) {
-    navigate('/cart');
+  useEffect(() => {
+    if (cartItems.length === 0 && !isProcessing) {
+      navigate('/cart');
+    }
+  }, [cartItems.length, navigate, isProcessing]);
+
+  if (cartItems.length === 0 && !isProcessing) {
     return null;
   }
 

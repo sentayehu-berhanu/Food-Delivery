@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, ShoppingCart, User, MapPin, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useLocationContext } from '../context/LocationContext';
 import NotificationDropdown from './NotificationDropdown';
+import LocationModal from './LocationModal';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
+  const { deliveryLocation } = useLocationContext();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm(''); // optional: clear after search
+    }
+  };
 
   return (
     <nav className="fixed w-full z-50 glass border-b border-gray-100">
@@ -21,9 +34,14 @@ const Navbar = () => {
           </div>
 
           {/* Location Picker */}
-          <div className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition">
-            <MapPin size={18} className="text-primary" />
-            <span className="text-sm font-medium text-gray-700">Deliver to: <span className="font-bold">Select Location</span></span>
+          <div 
+            onClick={() => setIsLocationModalOpen(true)}
+            className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition max-w-[250px]"
+          >
+            <MapPin size={18} className="text-primary flex-shrink-0" />
+            <span className="text-sm font-medium text-gray-700 truncate">
+              Deliver to: <span className="font-bold">{deliveryLocation}</span>
+            </span>
           </div>
 
           {/* Search Bar */}
@@ -36,6 +54,9 @@ const Navbar = () => {
                 type="text"
                 className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-full leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
                 placeholder="Search for restaurants or food..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearch}
               />
             </div>
           </div>
@@ -71,6 +92,11 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      <LocationModal 
+        isOpen={isLocationModalOpen} 
+        onClose={() => setIsLocationModalOpen(false)} 
+      />
     </nav>
   );
 };

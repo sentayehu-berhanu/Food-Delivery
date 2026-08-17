@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import gsap from 'gsap';
 import { Search, MapPin, Clock, Star } from 'lucide-react';
 
@@ -10,6 +10,12 @@ const CATEGORIES = [
   { icon: '🌮', name: 'Mexican' },
   { icon: '☕', name: 'Cafe' },
   { icon: '🥗', name: 'Healthy' },
+  { icon: '🍰', name: 'Desserts' },
+  { icon: '🍦', name: 'Ice Cream' },
+  { icon: '🍜', name: 'Noodles' },
+  { icon: '🍛', name: 'Curry' },
+  { icon: '🥪', name: 'Sandwich' },
+  { icon: '🍗', name: 'Chicken' }
 ];
 
 const RESTAURANTS = [
@@ -20,10 +26,23 @@ const RESTAURANTS = [
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const heroRef = useRef(null);
   const searchRef = useRef(null);
   const categoriesRef = useRef(null);
   const restaurantsRef = useRef(null);
+
+  const [heroSearch, setHeroSearch] = useState('');
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState('delivery');
+  
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get('search') || '';
+
+  const filteredRestaurants = RESTAURANTS.filter(r => 
+    r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    r.tags.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -91,11 +110,21 @@ const Home = () => {
               <MapPin className="text-primary mr-2" size={24} />
               <input 
                 type="text" 
-                placeholder="Enter your delivery location..." 
+                placeholder="Search for restaurants or food..." 
                 className="w-full py-3 outline-none text-gray-700 bg-transparent text-lg"
+                value={heroSearch}
+                onChange={(e) => setHeroSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && heroSearch.trim()) {
+                    navigate(`/?search=${encodeURIComponent(heroSearch.trim())}`);
+                  }
+                }}
               />
             </div>
-            <button className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-full font-bold transition flex items-center gap-2">
+            <button 
+              onClick={() => heroSearch.trim() && navigate(`/?search=${encodeURIComponent(heroSearch.trim())}`)}
+              className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-full font-bold transition flex items-center gap-2"
+            >
               <Search size={20} />
               Find Food
             </button>
@@ -108,12 +137,18 @@ const Home = () => {
         <div className="mb-16" ref={categoriesRef}>
           <div className="flex justify-between items-end mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Explore Categories</h2>
-            <button className="text-primary font-medium hover:underline">See all</button>
+            <button 
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="text-primary font-medium hover:underline"
+            >
+              {showAllCategories ? 'Show less' : 'See all'}
+            </button>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {CATEGORIES.map((cat, idx) => (
+            {(showAllCategories ? CATEGORIES : CATEGORIES.slice(0, 6)).map((cat, idx) => (
               <div 
                 key={idx} 
+                onClick={() => navigate(`/?search=${encodeURIComponent(cat.name)}`)}
                 className="category-item bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center cursor-pointer hover-lift flex flex-col items-center justify-center gap-3 group"
               >
                 <div className="text-4xl group-hover:scale-110 transition-transform">{cat.icon}</div>
@@ -126,15 +161,32 @@ const Home = () => {
         {/* Nearby Restaurants */}
         <div ref={restaurantsRef}>
           <div className="flex justify-between items-end mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Nearby Restaurants</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {searchQuery ? `Search Results for "${searchQuery}"` : 'Nearby Restaurants'}
+            </h2>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium hover:bg-gray-50 transition">Delivery</button>
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium hover:bg-gray-50 transition">Pickup</button>
+              <button 
+                onClick={() => setDeliveryMode('delivery')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${deliveryMode === 'delivery' ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                Delivery
+              </button>
+              <button 
+                onClick={() => setDeliveryMode('pickup')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${deliveryMode === 'pickup' ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                Pickup
+              </button>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {RESTAURANTS.map((restaurant) => (
+          {filteredRestaurants.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+              <p className="text-gray-500 text-lg">No restaurants found matching your search.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredRestaurants.map((restaurant) => (
               <div 
                 key={restaurant.id} 
                 className="restaurant-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover-lift cursor-pointer"
@@ -163,13 +215,16 @@ const Home = () => {
                       <span className="font-medium">{restaurant.time}</span>
                     </div>
                     <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-                      <span className="font-medium text-green-600">Free delivery</span>
+                      <span className="font-medium text-green-600">
+                        {deliveryMode === 'delivery' ? 'Free delivery' : 'Pickup available'}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

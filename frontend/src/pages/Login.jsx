@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,8 +7,16 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state && location.state.message) {
+      setMessage(location.state.message);
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,8 +57,13 @@ const Login = () => {
         </div>
         
         <form className="mt-8 space-y-6 relative z-10" onSubmit={handleSubmit}>
+          {message && (
+            <div className="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm text-center mb-4 font-medium">
+              {message}
+            </div>
+          )}
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center mb-4">
               {error}
             </div>
           )}
