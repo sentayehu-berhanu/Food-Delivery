@@ -4,13 +4,15 @@ import { ArrowRight, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWallet } from '../context/WalletContext';
 
-const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDate, scheduledTime, isProcessing, setIsProcessing, rewardPoints, usePoints }) => {
+const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDate, scheduledTime, isProcessing, setIsProcessing, paymentMethod }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
   const { clearCart, cartItems } = useCart();
   const { user } = useAuth();
+  const { payWithWallet, awardPoints } = useWallet();
   const [error, setError] = useState(null);
   const [isCardEmpty, setIsCardEmpty] = useState(true);
 
@@ -25,12 +27,19 @@ const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDat
     setError(null);
 
     try {
-      // For this mock phase, we just want to ensure they typed *something*
-      // without forcing them to know the exact Stripe test cards.
-      if (isCardEmpty) {
-        setError('Please enter your card details.');
-        setIsProcessing(false);
-        return;
+      if (paymentMethod === 'card') {
+        if (isCardEmpty) {
+          setError('Please enter your card details.');
+          setIsProcessing(false);
+          return;
+        }
+      } else if (paymentMethod === 'wallet') {
+        const success = payWithWallet(total);
+        if (!success) {
+          setError('Failed to pay with Wallet. Insufficient balance.');
+          setIsProcessing(false);
+          return;
+        }
       }
 
       // 1. Fetch PaymentIntent from backend
@@ -83,10 +92,7 @@ const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDat
         localStorage.setItem('mockLiveOrders', JSON.stringify(savedOrders));
 
         if (user) {
-          let newPoints = rewardPoints || 0;
-          if (usePoints && newPoints >= 500) newPoints -= 500;
-          newPoints += Math.floor(total * 10);
-          localStorage.setItem(`mockRewards_${user.id}`, newPoints.toString());
+          awardPoints(total);
         }
 
         navigate('/orders', { state: { message: `Payment successful! You paid $${total.toFixed(2)}.` } });
@@ -122,27 +128,33 @@ const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDat
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
-        <div className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
-          <Lock size={16} className="text-gray-400" />
-          Secure Card Payment
+      {paymentMethod === 'card' && (
+        <div className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
+          <div className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
+            <Lock size={16} className="text-gray-400" />
+            Secure Card Payment
+          </div>
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <CardElement 
+              options={cardElementOptions} 
+              onChange={(e) => {
+                setIsCardEmpty(e.empty);
+                if (error) setError(null);
+              }} 
+            />
+          </div>
+          {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
         </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <CardElement 
-            options={cardElementOptions} 
-            onChange={(e) => {
-              setIsCardEmpty(e.empty);
-              if (error) setError(null);
-            }} 
-          />
-        </div>
-        {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
-      </div>
+      )}
+
+      {paymentMethod === 'wallet' && error && (
+        <div className="mb-4 text-sm text-red-600 font-bold">{error}</div>
+      )}
 
       <button 
         type="submit"
-        disabled={!stripe || isProcessing}
-        className={`w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 text-white ${isProcessing || !stripe ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark shadow-lg shadow-orange-500/30'}`}
+        disabled={isProcessing || (paymentMethod === 'card' && !stripe)}
+        className={`w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 text-white ${(isProcessing || (paymentMethod === 'card' && !stripe)) ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark shadow-lg shadow-orange-500/30'}`}
       >
         {isProcessing ? 'Processing Payment...' : `Pay $${total.toFixed(2)}`}
         {!isProcessing && <ArrowRight size={20} />}

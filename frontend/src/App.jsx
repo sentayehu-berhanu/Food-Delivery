@@ -13,6 +13,11 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
+import Wallet from './pages/Wallet';
+import Subscriptions from './pages/Subscriptions';
+import RescueHub from './pages/RescueHub';
+import Discover from './pages/Discover';
+import CorporatePortal from './pages/CorporatePortal';
 import RestaurantLayout from './components/RestaurantLayout';
 import DashboardHome from './pages/DashboardHome';
 import DashboardOrders from './pages/DashboardOrders';
@@ -29,6 +34,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminRestaurants from './pages/AdminRestaurants';
 import AdminSettings from './pages/AdminSettings';
 import DashboardPromos from './pages/DashboardPromos';
+import SupportChat from './components/SupportChat';
 
 function App() {
   return (
@@ -57,6 +63,11 @@ function App() {
         <Route path="/checkout" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Checkout /></main></div>} />
         <Route path="/orders" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Orders /></main></div>} />
         <Route path="/profile" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Profile /></main></div>} />
+        <Route path="/wallet" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Wallet /></main></div>} />
+        <Route path="/subscriptions" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Subscriptions /></main></div>} />
+        <Route path="/rescue" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><RescueHub /></main></div>} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/corporate" element={<CorporatePortal />} />
 
         <Route path="/restaurant-dashboard" element={<RestaurantLayout />}>
           <Route index element={<DashboardHome />} />
@@ -82,6 +93,7 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>
+      <SupportChat />
       <ToastContainer 
         position="top-right" 
         autoClose={4000} 

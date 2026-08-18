@@ -5,6 +5,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWallet } from '../context/WalletContext';
+import { useGroupOrder } from '../context/GroupOrderContext';
 import CheckoutForm from '../components/CheckoutForm';
 
 // Initialize Stripe outside of component render to avoid recreating the Stripe object
@@ -13,8 +15,9 @@ import CheckoutForm from '../components/CheckoutForm';
 const stripePromise = loadStripe('pk_test_placeholder');
 
 const Checkout = () => {
-  const { cartItems, total } = useCart();
+  const { cartItems, subtotal, deliveryFee, serviceFee, tax, total, uniqueRestaurants } = useCart();
   const { user } = useAuth();
+  const { isActive, isHost, members } = useGroupOrder();
   const navigate = useNavigate();
 
   const [address, setAddress] = useState('Bole, Addis Ababa');
@@ -23,6 +26,7 @@ const Checkout = () => {
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'wallet'
   
   const [savedAddresses, setSavedAddresses] = useState([]);
 
@@ -51,19 +55,10 @@ const Checkout = () => {
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoMessage, setPromoMessage] = useState({ text: '', type: '' });
   
-  const [rewardPoints, setRewardPoints] = useState(0);
-  const [usePoints, setUsePoints] = useState(false);
-
-  useEffect(() => {
-    if (user?.id) {
-      const savedRewards = localStorage.getItem(`mockRewards_${user.id}`);
-      if (savedRewards) {
-        setRewardPoints(parseInt(savedRewards, 10));
-      } else {
-        setRewardPoints(150);
-      }
-    }
-  }, [user]);
+  const { balance, points, vouchers, useVoucher } = useWallet();
+  const [selectedVoucher, setSelectedVoucher] = useState('');
+  
+  const corporateAllowance = Number(localStorage.getItem('corporateAllowance')) || 0;
 
   const handleApplyPromo = () => {
     const saved = localStorage.getItem('mockPromos');
@@ -96,8 +91,9 @@ const Checkout = () => {
     }
   };
 
-  const pointsDiscount = usePoints && rewardPoints >= 500 ? 5.00 : 0;
-  const totalDiscount = promoDiscount + pointsDiscount;
+  const selectedVoucherObj = vouchers.find(v => v.code === selectedVoucher && !v.isUsed);
+  const voucherDiscount = selectedVoucherObj ? selectedVoucherObj.value : 0;
+  const totalDiscount = promoDiscount + voucherDiscount;
 
   const [tipPercentage, setTipPercentage] = useState(15); // default 15%
   const [customTip, setCustomTip] = useState('');
@@ -114,10 +110,21 @@ const Checkout = () => {
   
   // Calculate Split Bill Shares
   const splitInCents = Math.round(finalTotal * 100);
-  const myShare = ((Math.floor(splitInCents / splitWays) + (splitInCents % splitWays)) / 100);
+  
+  // Calculate dynamic share for Group Orders
+  let groupOrderMyShare = 0;
+  if (isActive && user) {
+    const myItems = cartItems.filter(item => item.addedBy === user.id);
+    const myItemsTotal = myItems.reduce((acc, item) => acc + ((item.totalPrice || item.price || item.basePrice || 0) * item.quantity), 0);
+    // Proportion of finalTotal
+    const ratio = total > 0 ? (myItemsTotal / total) : 0;
+    groupOrderMyShare = finalTotal * ratio;
+  }
+
+  const myShare = isActive ? groupOrderMyShare : ((Math.floor(splitInCents / splitWays) + (splitInCents % splitWays)) / 100);
   const baseShare = Math.floor(splitInCents / splitWays) / 100;
   
-  const amountToPay = isBillSplit ? myShare : finalTotal;
+  const amountToPay = (isBillSplit || isActive) ? myShare : finalTotal;
 
   useEffect(() => {
     if (cartItems.length === 0 && !isProcessing) {
@@ -238,29 +245,126 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Stripe Payment Form */}
+            {/* Payment Method Selection */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Method</h2>
               
-              <Elements stripe={stripePromise}>
-                <CheckoutForm 
-                  address={address} 
-                  instructions={instructions} 
-                  total={amountToPay}
-                  deliveryType={deliveryType}
-                  scheduledDate={scheduledDate}
-                  scheduledTime={scheduledTime}
-                  isProcessing={isProcessing}
-                  setIsProcessing={setIsProcessing}
-                  rewardPoints={rewardPoints}
-                  usePoints={usePoints}
-                />
-              </Elements>
-              
-              <div className="mt-4 flex items-center gap-2 justify-center text-sm text-gray-500">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-5 opacity-50 grayscale" />
-                Payments are secure and encrypted.
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <button
+                  onClick={() => setPaymentMethod('card')}
+                  className={`flex-1 py-3 rounded-xl font-bold transition border-2 ${
+                    paymentMethod === 'card' 
+                      ? 'border-primary bg-orange-50 text-primary' 
+                      : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                  }`}
+                >
+                  Credit Card
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('wallet')}
+                  className={`flex-1 py-3 rounded-xl font-bold transition border-2 flex flex-col items-center justify-center ${
+                    paymentMethod === 'wallet' 
+                      ? 'border-primary bg-orange-50 text-primary' 
+                      : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                  }`}
+                >
+                  <span>FoodGo Wallet</span>
+                  <span className="text-xs font-normal">Balance: ${balance.toFixed(2)}</span>
+                </button>
+                {corporateAllowance > 0 && (
+                  <button
+                    onClick={() => setPaymentMethod('corporate')}
+                    className={`flex-1 py-3 rounded-xl font-bold transition border-2 flex flex-col items-center justify-center ${
+                      paymentMethod === 'corporate' 
+                        ? 'border-blue-600 bg-blue-50 text-blue-600' 
+                        : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                    }`}
+                  >
+                    <span>Company Allowance</span>
+                    <span className="text-xs font-normal">Remaining: ${corporateAllowance.toFixed(2)}</span>
+                  </button>
+                )}
               </div>
+
+              {paymentMethod === 'card' ? (
+                <>
+                  <Elements stripe={stripePromise}>
+                    <CheckoutForm 
+                      address={address} 
+                      instructions={instructions} 
+                      total={amountToPay}
+                      deliveryType={deliveryType}
+                      scheduledDate={scheduledDate}
+                      scheduledTime={scheduledTime}
+                      isProcessing={isProcessing}
+                      setIsProcessing={setIsProcessing}
+                      paymentMethod="card"
+                    />
+                  </Elements>
+                  <div className="mt-4 flex items-center gap-2 justify-center text-sm text-gray-500">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-5 opacity-50 grayscale" />
+                    Payments are secure and encrypted.
+                  </div>
+                </>
+              ) : paymentMethod === 'wallet' ? (
+                <div className="pt-2">
+                  {balance >= amountToPay ? (
+                    <Elements stripe={stripePromise}>
+                      <CheckoutForm 
+                        address={address} 
+                        instructions={instructions} 
+                        total={amountToPay}
+                        deliveryType={deliveryType}
+                        scheduledDate={scheduledDate}
+                        scheduledTime={scheduledTime}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                        paymentMethod="wallet"
+                      />
+                    </Elements>
+                  ) : (
+                    <div className="text-center p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 mb-4">
+                      <p className="font-bold">Insufficient Wallet Balance</p>
+                      <p className="text-sm">Please top up your wallet or use a credit card.</p>
+                      <button 
+                        onClick={() => navigate('/wallet')}
+                        className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold"
+                      >
+                        Go to Wallet
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-2">
+                  {corporateAllowance >= amountToPay ? (
+                    <Elements stripe={stripePromise}>
+                      <CheckoutForm 
+                        address={address} 
+                        instructions={instructions} 
+                        total={amountToPay}
+                        deliveryType={deliveryType}
+                        scheduledDate={scheduledDate}
+                        scheduledTime={scheduledTime}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                        paymentMethod="corporate"
+                      />
+                    </Elements>
+                  ) : (
+                    <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 mb-4">
+                      <p className="font-bold">Order Exceeds Daily Allowance</p>
+                      <p className="text-sm">Your order is ${amountToPay.toFixed(2)}, but you only have ${corporateAllowance.toFixed(2)} remaining. Please use your personal credit card.</p>
+                      <button 
+                        onClick={() => setPaymentMethod('card')}
+                        className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold"
+                      >
+                        Switch to Credit Card
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
           </div>
@@ -269,11 +373,21 @@ const Checkout = () => {
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sticky top-24">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h3>
               
-              <div className="mb-6 space-y-2 text-sm max-h-[30vh] overflow-y-auto pr-2">
-                {cartItems.map(item => (
-                  <div key={item.cartId} className="flex justify-between border-b border-gray-50 pb-2">
-                    <span className="text-gray-600 truncate mr-2">{item.quantity}x {item.name}</span>
-                    <span className="font-medium text-gray-900">${(item.totalPrice || item.price || item.basePrice || 0).toFixed(2)}</span>
+              <div className="mb-6 space-y-4 text-sm max-h-[40vh] overflow-y-auto pr-2">
+                {Object.entries(cartItems.reduce((acc, item) => {
+                  const rName = item.restaurantName || 'FoodGo Delivery';
+                  if (!acc[rName]) acc[rName] = [];
+                  acc[rName].push(item);
+                  return acc;
+                }, {})).map(([rName, items]) => (
+                  <div key={rName} className="mb-4">
+                    <h4 className="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-2">{rName}</h4>
+                    {items.map(item => (
+                      <div key={item.cartId} className="flex justify-between pb-1 text-gray-600">
+                        <span className="truncate mr-2">{item.quantity}x {item.name}</span>
+                        <span className="font-medium">${(item.totalPrice || item.price || item.basePrice || 0).toFixed(2)}</span>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -302,7 +416,19 @@ const Checkout = () => {
                 
                 <div className="flex justify-between text-gray-500 text-sm mb-1">
                   <span>Subtotal</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500 text-sm mb-1">
+                  <span>Delivery Fee {uniqueRestaurants > 1 ? `(Multi-Stop: ${uniqueRestaurants})` : ''}</span>
+                  <span>${deliveryFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500 text-sm mb-1">
+                  <span>Service Fee</span>
+                  <span>${serviceFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500 text-sm mb-1">
+                  <span>Tax</span>
+                  <span>${tax.toFixed(2)}</span>
                 </div>
                 {totalDiscount > 0 && (
                   <div className="flex justify-between text-green-600 text-sm mb-2 font-bold">
@@ -311,16 +437,20 @@ const Checkout = () => {
                   </div>
                 )}
                 
-                {rewardPoints >= 500 && (
-                  <label className="flex items-center gap-2 mb-4 p-3 bg-orange-50 border border-orange-200 rounded-xl cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 text-primary focus:ring-primary rounded"
-                      checked={usePoints}
-                      onChange={(e) => setUsePoints(e.target.checked)}
-                    />
-                    <span className="text-sm font-bold text-gray-700">Redeem 500 points for $5.00 off!</span>
-                  </label>
+                {vouchers.filter(v => !v.isUsed).length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Apply Voucher</label>
+                    <select 
+                      className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={selectedVoucher}
+                      onChange={(e) => setSelectedVoucher(e.target.value)}
+                    >
+                      <option value="">-- Select a voucher --</option>
+                      {vouchers.filter(v => !v.isUsed).map(v => (
+                        <option key={v.code} value={v.code}>${v.value} Off - {v.code}</option>
+                      ))}
+                    </select>
+                  </div>
                 )}
                 
                 <div className="mb-4 pt-2">
@@ -358,22 +488,54 @@ const Checkout = () => {
                 </div>
 
                 <div className="flex justify-between items-end mt-2 pt-2 border-t border-gray-100">
-                  <p className="text-gray-900 font-bold">{isBillSplit ? 'Your Share' : 'Total to Pay'}</p>
+                  <p className="text-gray-900 font-bold">{(isBillSplit || isActive) ? 'Your Share' : 'Total to Pay'}</p>
                   <p className="text-3xl font-extrabold text-gray-900">${amountToPay.toFixed(2)}</p>
                 </div>
-                {isBillSplit && (
-                  <div className="flex justify-between items-center mt-2 text-sm">
-                    <span className="text-gray-500">Total Bill: ${finalTotal.toFixed(2)}</span>
-                    <button onClick={() => setIsBillSplit(false)} className="text-indigo-600 font-bold hover:underline">Cancel Split</button>
+                {(isBillSplit || isActive) && (
+                  <div className="flex flex-col mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
+                    <div className="flex justify-between items-center font-bold text-indigo-900 mb-2">
+                      <span>Total Bill:</span>
+                      <span>${finalTotal.toFixed(2)}</span>
+                    </div>
+                    {isActive ? (
+                      <>
+                        <div className="text-indigo-700 text-xs mb-2">
+                          Automatically split based on items ordered.
+                        </div>
+                        {members.filter(m => m.id !== user?.id).map(m => {
+                          const mItems = cartItems.filter(item => item.addedBy === m.id);
+                          const mTotal = mItems.reduce((acc, item) => acc + ((item.totalPrice || item.price || item.basePrice || 0) * item.quantity), 0);
+                          const mRatio = total > 0 ? (mTotal / total) : 0;
+                          const mShare = finalTotal * mRatio;
+                          
+                          if (mShare > 0) {
+                            return (
+                              <div key={m.id} className="flex justify-between text-indigo-600 mb-1">
+                                <span>{m.name}'s Share:</span>
+                                <span>${mShare.toFixed(2)}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                      </>
+                    ) : (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-indigo-600">Splitting {splitWays} ways</span>
+                        <button onClick={() => setIsBillSplit(false)} className="text-indigo-800 font-bold hover:underline">Cancel Split</button>
+                      </div>
+                    )}
                   </div>
                 )}
                 
-                <button 
-                  onClick={() => setShowSplitModal(true)}
-                  className="w-full mt-4 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-xl transition flex items-center justify-center gap-2 border border-indigo-200"
-                >
-                  <Users size={18} /> Split this Bill
-                </button>
+                {!isActive && (
+                  <button 
+                    onClick={() => setShowSplitModal(true)}
+                    className="w-full mt-4 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-xl transition flex items-center justify-center gap-2 border border-indigo-200"
+                  >
+                    <Users size={18} /> Split this Bill
+                  </button>
+                )}
               </div>
 
               {!user && (

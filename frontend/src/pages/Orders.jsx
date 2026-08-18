@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import OrderTimeline from '../components/OrderTimeline';
-import ReviewModal from '../components/ReviewModal';
+import OrderRatingModal from '../components/OrderRatingModal';
 import LiveMapTracking from '../components/LiveMapTracking';
 
 const Orders = () => {
@@ -101,7 +101,7 @@ const Orders = () => {
       date: new Date().toISOString()
     };
     localStorage.setItem('restaurantReviews', JSON.stringify([newReview, ...existingReviews]));
-    setMessage('Thank you for your review!');
+    setMessage('Thank you for rating your food and driver!');
   };
 
   return (
@@ -175,7 +175,7 @@ const Orders = () => {
                         className="px-6 py-2 bg-white text-primary border-2 border-primary font-bold rounded-xl hover:bg-primary hover:text-white transition flex items-center gap-2"
                       >
                         <Star size={18} />
-                        Leave Review
+                        Rate Order
                       </button>
                     )}
                     <button 
@@ -192,7 +192,7 @@ const Orders = () => {
         )}
       </div>
 
-      <ReviewModal 
+      <OrderRatingModal 
         isOpen={reviewModalOpen}
         onClose={() => { setReviewModalOpen(false); setSelectedOrder(null); }}
         order={selectedOrder}

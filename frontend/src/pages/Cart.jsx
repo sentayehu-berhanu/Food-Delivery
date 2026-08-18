@@ -1,11 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Users, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useGroupOrder } from '../context/GroupOrderContext';
+import CrossSellCarousel from '../components/CrossSellCarousel';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, subtotal, deliveryFee, serviceFee, tax, total } = useCart();
+  const { isActive, isHost, isLocked, lockOrder, members } = useGroupOrder();
   const navigate = useNavigate();
   const containerRef = useRef(null);
 
@@ -43,58 +46,149 @@ const Cart = () => {
           <div className="lg:w-2/3">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <h2 className="font-bold text-gray-900 text-lg">Order Summary</h2>
+                <h2 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  {isActive ? <><Users size={20} className="text-indigo-600" /> Group Order Summary</> : 'Order Summary'}
+                </h2>
                 <span className="text-gray-500">{cartItems.length} items</span>
               </div>
               
               <div className="divide-y divide-gray-100">
-                {cartItems.map((item) => {
-                  const displayPrice = item.totalPrice || item.price || item.basePrice || 0;
-                  return (
-                    <div key={item.cartId} className="p-6 flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-                        <button 
-                          onClick={() => removeFromCart(item.cartId)}
-                          className="text-gray-400 hover:text-red-500 transition p-1"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                {!isActive ? (
+                  Object.entries(cartItems.reduce((acc, item) => {
+                    const rName = item.restaurantName || 'FoodGo Delivery';
+                    if (!acc[rName]) acc[rName] = [];
+                    acc[rName].push(item);
+                    return acc;
+                  }, {})).map(([rName, items]) => (
+                    <div key={rName} className="border-b border-gray-100 last:border-0 pb-4">
+                      <div className="bg-orange-50/50 px-6 py-3 flex justify-between items-center border-y border-orange-100/50">
+                        <span className="font-bold text-orange-900 flex items-center gap-2">
+                          <ShoppingBag size={18} className="text-orange-600" />
+                          {rName}
+                        </span>
                       </div>
-                      
-                      <div className="text-sm text-gray-500 mb-4 space-y-1">
-                        {item.size && <p>Size: {item.size.name}</p>}
-                        {item.toppings && item.toppings.length > 0 && (
-                          <p>Toppings: {item.toppings.map(t => t.name).join(', ')}</p>
-                        )}
-                        {item.sauce && <p>Sauce: {item.sauce.name}</p>}
-                        {item.instructions && <p className="italic">"{item.instructions}"</p>}
-                      </div>
-                      
-                      <div className="flex justify-between items-center mt-auto">
-                        <div className="flex items-center bg-gray-50 rounded-full border border-gray-200">
-                          <button 
-                            onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
-                          >
-                            <Plus size={14} />
-                          </button>
+                      <div className="divide-y divide-gray-50">
+                        {items.map((item) => {
+                          const displayPrice = item.totalPrice || item.price || item.basePrice || 0;
+                          return (
+                          <div key={item.cartId} className="px-6 py-4 flex flex-col sm:flex-row gap-4">
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
+                              <button 
+                                onClick={() => removeFromCart(item.cartId)}
+                                className="text-gray-400 hover:text-red-500 transition p-1"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                            
+                            <div className="text-sm text-gray-500 mb-4 space-y-1">
+                              {item.size && <p>Size: {item.size.name}</p>}
+                              {item.toppings && item.toppings.length > 0 && (
+                                <p>Toppings: {item.toppings.map(t => t.name).join(', ')}</p>
+                              )}
+                              {item.sauce && <p>Sauce: {item.sauce.name}</p>}
+                              {item.instructions && <p className="italic">"{item.instructions}"</p>}
+                            </div>
+                            
+                            <div className="flex justify-between items-center mt-auto">
+                              <div className="flex items-center bg-gray-50 rounded-full border border-gray-200">
+                                <button 
+                                  onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
+                                >
+                                  <Minus size={14} />
+                                </button>
+                                <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
+                                <button 
+                                  onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
+                                >
+                                  <Plus size={14} />
+                                </button>
+                              </div>
+                              <span className="font-bold text-lg text-gray-900">${displayPrice.toFixed(2)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <span className="font-bold text-lg text-gray-900">${displayPrice.toFixed(2)}</span>
+                        );
+                      })}
                       </div>
                     </div>
-                  </div>
-                  );
-                })}
+                  ))
+                ) : (
+                // GROUP ORDER CART
+                <div>
+                  {members.map(member => {
+                    const memberItems = cartItems.filter(item => item.addedBy === member.id);
+                    if (memberItems.length === 0) return null;
+                    
+                    const memberTotal = memberItems.reduce((acc, item) => acc + ((item.totalPrice || item.price || item.basePrice || 0) * item.quantity), 0);
+
+                    return (
+                      <div key={member.id} className="border-b border-gray-100 last:border-0 pb-4">
+                        <div className="bg-indigo-50/50 px-6 py-3 flex justify-between items-center border-y border-indigo-100/50">
+                          <span className="font-bold text-indigo-900 flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-200 flex items-center justify-center text-xs font-black text-indigo-700">
+                              {member.name.charAt(0).toUpperCase()}
+                            </div>
+                            {member.name}'s Items
+                          </span>
+                          <span className="font-bold text-indigo-600">${memberTotal.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="divide-y divide-gray-50">
+                          {memberItems.map(item => {
+                            const displayPrice = item.totalPrice || item.price || item.basePrice || 0;
+                            return (
+                              <div key={item.cartId} className="px-6 py-4 flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-bold text-gray-900">{item.name}</h3>
+                                    {!isLocked && (
+                                      <button 
+                                        onClick={() => removeFromCart(item.cartId)}
+                                        className="text-gray-400 hover:text-red-500 transition p-1"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center mt-2">
+                                    {!isLocked ? (
+                                      <div className="flex items-center bg-gray-50 rounded-full border border-gray-200">
+                                        <button 
+                                          onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                                          className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
+                                        >
+                                          <Minus size={12} />
+                                        </button>
+                                        <span className="w-8 text-center font-bold text-xs">{item.quantity}</span>
+                                        <button 
+                                          onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                                          className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
+                                        >
+                                          <Plus size={12} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm font-medium text-gray-500">Qty: {item.quantity}</span>
+                                    )}
+                                    <span className="font-bold text-sm text-gray-900">${(displayPrice * item.quantity).toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               </div>
+              <CrossSellCarousel />
             </div>
           </div>
           
@@ -109,7 +203,10 @@ const Cart = () => {
                   <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Delivery Fee</span>
+                  <span className="flex items-center gap-1">
+                    Delivery Fee 
+                    {useCart().uniqueRestaurants > 1 && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold ml-1">Multi-Stop</span>}
+                  </span>
                   <span className="font-medium text-gray-900">${deliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
@@ -129,13 +226,39 @@ const Cart = () => {
                 </div>
               </div>
               
-              <button 
-                onClick={() => navigate('/checkout')}
-                className="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30"
-              >
-                Proceed to Checkout
-                <ArrowRight size={20} />
-              </button>
+              {isActive ? (
+                isHost ? (
+                  !isLocked ? (
+                    <button 
+                      onClick={lockOrder}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30"
+                    >
+                      <Lock size={20} />
+                      Lock Order & Continue
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => navigate('/checkout')}
+                      className="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30"
+                    >
+                      Proceed to Checkout
+                      <ArrowRight size={20} />
+                    </button>
+                  )
+                ) : (
+                  <div className="text-center p-4 bg-gray-100 rounded-xl text-gray-500 text-sm font-medium">
+                    Waiting for Host to lock order and checkout...
+                  </div>
+                )
+              ) : (
+                <button 
+                  onClick={() => navigate('/checkout')}
+                  className="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30"
+                >
+                  Proceed to Checkout
+                  <ArrowRight size={20} />
+                </button>
+              )}
             </div>
           </div>
         </div>

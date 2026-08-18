@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
-import { Star, Clock, Info, Search, Filter, Leaf, WheatOff } from 'lucide-react';
+import { Star, Clock, Info, Search, Filter, Leaf, WheatOff, Users } from 'lucide-react';
 import FoodCard from '../components/FoodCard';
 import FoodModal from '../components/FoodModal';
 import RestaurantInfoModal from '../components/RestaurantInfoModal';
 import FavoriteButton from '../components/FavoriteButton';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useGroupOrder } from '../context/GroupOrderContext';
+import GroupOrderLobby from '../components/GroupOrderLobby';
 
 // Mock Data for Phase 2
 const MOCK_RESTAURANT = {
@@ -18,7 +20,7 @@ const MOCK_RESTAURANT = {
   tags: 'Italian • Pizza • Fast Food',
   priceLevel: '$$',
   image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&auto=format&fit=crop&q=80',
-  categories: ['Popular', 'Pizzas', 'Sides', 'Drinks'],
+  categories: ['Popular', 'Pizzas', 'Sides', 'Drinks', 'Catering Platters'],
   address: '456 Pizza Lane, Food City, FC 12345',
   phone: '+1 (555) 987-6543',
   email: 'hello@pizzahouse.com'
@@ -86,6 +88,19 @@ const MOCK_MENU = [
     toppings: [
       { id: 't7', name: 'Add Cheese', price: 1.50 }
     ],
+    sauces: []
+  },
+  {
+    id: 'f4',
+    category: 'Catering Platters',
+    name: 'Corporate Pizza Party Platter',
+    description: 'Perfect for the office! 5 large pizzas of your choice, a huge tray of garlic bread, and a 2L soda.',
+    price: 95.00,
+    image: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=500&auto=format&fit=crop&q=60',
+    calories: '🔥 15,000 kcal',
+    dietary: [],
+    sizes: [],
+    toppings: [],
     sauces: []
   }
 ];
@@ -182,6 +197,7 @@ const RestaurantDetails = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isActive, startGroupOrder, addGroupItem } = useGroupOrder();
   
   const handleFoodClick = (food) => {
     setSelectedFood(food);
@@ -192,7 +208,12 @@ const RestaurantDetails = () => {
       navigate('/login', { state: { message: 'Please log in to add items to your cart.' } });
       return;
     }
-    addToCart(cartItem);
+    
+    if (isActive) {
+      addGroupItem(cartItem, user.id, user.name);
+    } else {
+      addToCart(cartItem);
+    }
     console.log('Added to cart:', cartItem);
   };
 
@@ -240,19 +261,37 @@ const RestaurantDetails = () => {
               </div>
             </div>
             
-            <button 
-              onClick={() => setIsInfoModalOpen(true)}
-              className="flex items-center gap-2 text-primary font-bold hover:bg-orange-50 px-4 py-2 rounded-xl transition"
-            >
-              <Info size={20} />
-              More Info
-            </button>
+            <div className="flex gap-2">
+              {!isActive && (
+                <button 
+                  onClick={() => {
+                    if (!user) navigate('/login');
+                    else startGroupOrder(restaurant.id);
+                  }}
+                  className="flex items-center gap-2 bg-indigo-600 text-white font-bold hover:bg-indigo-700 px-4 py-2 rounded-xl transition shadow-lg shadow-indigo-500/30"
+                >
+                  <Users size={20} />
+                  Start Group Order
+                </button>
+              )}
+              <button 
+                onClick={() => setIsInfoModalOpen(true)}
+                className="flex items-center gap-2 text-primary font-bold hover:bg-orange-50 px-4 py-2 rounded-xl transition"
+              >
+                <Info size={20} />
+                More Info
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
+      
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        
+        <GroupOrderLobby />
+        
+        <div className="flex flex-col md:flex-row gap-8">
           
           {/* Sidebar / Categories */}
           <div className="lg:w-1/4">
@@ -393,6 +432,8 @@ const RestaurantDetails = () => {
           onClose={() => setSelectedFood(null)} 
           onAddToCart={handleAddToCart}
           restaurantEmail={restaurant.email}
+          restaurantId={restaurant.id}
+          restaurantName={restaurant.name}
         />
       )}
 

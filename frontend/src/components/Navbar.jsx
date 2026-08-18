@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, MapPin, LogOut, Moon, Sun } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Search, ShoppingCart, User, MapPin, LogOut, Moon, Sun, Wallet, Calendar, History, Leaf, Compass, Building2 } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useLocationContext } from '../context/LocationContext';
@@ -72,6 +72,24 @@ const Navbar = () => {
                   <User size={22} />
                   <span className="hidden sm:inline">{user.name}</span>
                 </Link>
+                <NavLink to="/wallet" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
+                  <Wallet size={18} /> Wallet
+                </NavLink>
+                <NavLink to="/orders" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
+                  <History size={18} /> Orders
+                </NavLink>
+                <NavLink to="/subscriptions" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
+                  <Calendar size={18} /> Meal Plans
+                </NavLink>
+                <NavLink to="/discover" className={({isActive}) => isActive ? "text-purple-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-purple-600 transition font-bold flex items-center gap-2"}>
+                  <Compass size={18} /> FoodTok
+                </NavLink>
+                <NavLink to="/corporate" className={({isActive}) => isActive ? "text-blue-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-blue-600 transition font-bold flex items-center gap-2"}>
+                  <Building2 size={18} /> Corporate
+                </NavLink>
+                <NavLink to="/rescue" className={({isActive}) => isActive ? "text-green-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-green-600 transition font-bold flex items-center gap-2"}>
+                  <Leaf size={18} /> Zero Waste
+                </NavLink>
                 <button onClick={logout} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                   <LogOut size={22} />
                 </button>

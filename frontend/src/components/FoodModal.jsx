@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { X, Minus, Plus } from 'lucide-react';
 
-const FoodModal = ({ food, onClose, onAddToCart, restaurantEmail }) => {
+const FoodModal = ({ food, onClose, onAddToCart, restaurantEmail, restaurantId, restaurantName }) => {
   const modalRef = useRef(null);
   
   // State for customization
@@ -56,7 +56,9 @@ const FoodModal = ({ food, onClose, onAddToCart, restaurantEmail }) => {
       instructions,
       quantity,
       totalPrice,
-      restaurantEmail
+      restaurantEmail,
+      restaurantId,
+      restaurantName
     };
     onAddToCart(cartItem);
     handleClose();

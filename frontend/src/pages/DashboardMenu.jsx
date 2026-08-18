@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Leaf, Compass } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const DashboardMenu = () => {
   const [restaurants, setRestaurants] = useState(() => {
@@ -28,6 +29,18 @@ const DashboardMenu = () => {
   }, [menuItems]);
 
   const [editingItem, setEditingItem] = useState(null);
+  const [showRescueModal, setShowRescueModal] = useState(false);
+  const [showFoodTokModal, setShowFoodTokModal] = useState(false);
+  const [rescueBags, setRescueBags] = useState(() => {
+    const saved = localStorage.getItem('mockRescueBags');
+    if (saved) return JSON.parse(saved);
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mockRescueBags', JSON.stringify(rescueBags));
+  }, [rescueBags]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,12 +78,26 @@ const DashboardMenu = () => {
             ))}
           </select>
         </div>
-        <button 
-          onClick={() => setEditingItem({ name: '', category: 'Burgers', description: '', price: '', status: 'Available', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500', isNew: true })}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md shadow-orange-500/20 w-full sm:w-auto justify-center"
-        >
-          <Plus size={20} /> Add New Item
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button 
+            onClick={() => setShowFoodTokModal(true)}
+            className="flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 px-5 py-2.5 rounded-xl font-bold transition border border-purple-200"
+          >
+            <Compass size={20} /> Post to FoodTok
+          </button>
+          <button 
+            onClick={() => setShowRescueModal(true)}
+            className="flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-5 py-2.5 rounded-xl font-bold transition border border-green-200"
+          >
+            <Leaf size={20} /> Rescue Bags
+          </button>
+          <button 
+            onClick={() => setEditingItem({ name: '', category: 'Burgers', description: '', price: '', status: 'Available', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500', isNew: true })}
+            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md shadow-orange-500/20"
+          >
+            <Plus size={20} /> Add New Item
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -296,6 +323,118 @@ const DashboardMenu = () => {
                 }}
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rescue Bags Modal */}
+      {showRescueModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-3xl shadow-xl w-full max-w-md">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Leaf className="text-green-600 w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Manage Rescue Bags</h2>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+                <p className="text-sm text-gray-600 mb-4">
+                  Help reduce food waste! List a Surprise Bag of today's surplus food.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Number of Bags Available</label>
+                    <input type="number" defaultValue="3" className="w-full border border-gray-200 p-2.5 rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Price (Discounted)</label>
+                    <input type="number" defaultValue="4.99" step="0.01" className="w-full border border-gray-200 p-2.5 rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Pickup Window</label>
+                    <input type="text" defaultValue="9:00 PM - 10:00 PM" className="w-full border border-gray-200 p-2.5 rounded-xl bg-white focus:ring-2 focus:ring-green-500 outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button 
+                className="px-6 py-3 font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition" 
+                onClick={() => setShowRescueModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition shadow-lg shadow-green-500/30" 
+                onClick={() => {
+                  toast.success("Rescue Bags listed successfully!");
+                  setShowRescueModal(false);
+                }}
+              >
+                Publish Bags
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FoodTok Modal */}
+      {showFoodTokModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-3xl shadow-xl w-full max-w-md">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Compass className="text-purple-600 w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Post to FoodTok</h2>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+                <p className="text-sm text-gray-600 mb-4">
+                  Share a mouth-watering photo or video to the discovery feed to drive instant orders!
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Select Menu Item</label>
+                    <select className="w-full border border-gray-200 p-2.5 rounded-xl bg-white focus:ring-2 focus:ring-purple-500 outline-none">
+                      {menuItems.map(item => (
+                        <option key={item.id} value={item.id}>{item.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Upload Media</label>
+                    <input type="file" accept="image/*,video/*" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-50 file:text-purple-600 hover:file:bg-purple-100 cursor-pointer" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Caption</label>
+                    <textarea placeholder="Write a catchy caption..." className="w-full border border-gray-200 p-2.5 rounded-xl bg-white focus:ring-2 focus:ring-purple-500 outline-none resize-none h-20"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button 
+                className="px-6 py-3 font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition" 
+                onClick={() => setShowFoodTokModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition shadow-lg shadow-purple-500/30" 
+                onClick={() => {
+                  toast.success("Posted to FoodTok Feed!");
+                  setShowFoodTokModal(false);
+                }}
+              >
+                Publish Post
               </button>
             </div>
           </div>

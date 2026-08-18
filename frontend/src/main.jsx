@@ -6,6 +6,9 @@ import { CartProvider } from './context/CartContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { LocationProvider } from './context/LocationContext'
+import { WalletProvider } from './context/WalletContext'
+import { GroupOrderProvider } from './context/GroupOrderContext'
+import { SubscriptionProvider } from './context/SubscriptionContext'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import App from './App.jsx'
@@ -18,10 +21,16 @@ createRoot(document.getElementById('root')).render(
         <NotificationProvider>
           <LocationProvider>
             <CartProvider>
-              <ThemeProvider>
-                <App />
-                <ToastContainer />
-              </ThemeProvider>
+              <GroupOrderProvider>
+                <SubscriptionProvider>
+                  <WalletProvider>
+                    <ThemeProvider>
+                      <App />
+                      <ToastContainer />
+                    </ThemeProvider>
+                  </WalletProvider>
+                </SubscriptionProvider>
+              </GroupOrderProvider>
             </CartProvider>
           </LocationProvider>
         </NotificationProvider>

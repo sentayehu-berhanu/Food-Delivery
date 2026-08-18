@@ -66,8 +66,12 @@ export const CartProvider = ({ children }) => {
   };
 
   // Calculations
+  const uniqueRestaurants = new Set(cartItems.map(item => item.restaurantId).filter(Boolean)).size;
   const subtotal = cartItems.reduce((sum, item) => sum + (item.totalPrice || item.price || item.basePrice || 0), 0);
-  const deliveryFee = subtotal > 0 ? 3.00 : 0;
+  
+  // Base delivery fee is $3.00, plus $1.99 for each additional restaurant (Multi-Stop Fee)
+  const deliveryFee = subtotal > 0 ? 3.00 + (uniqueRestaurants > 1 ? (uniqueRestaurants - 1) * 1.99 : 0) : 0;
+  
   const serviceFee = subtotal > 0 ? 2.00 : 0;
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + deliveryFee + serviceFee + tax;
@@ -86,7 +90,8 @@ export const CartProvider = ({ children }) => {
       serviceFee,
       tax,
       total,
-      itemCount
+      itemCount,
+      uniqueRestaurants
     }}>
       {children}
     </CartContext.Provider>

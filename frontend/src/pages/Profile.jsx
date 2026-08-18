@@ -4,9 +4,11 @@ import { User, Mail, Shield, MapPin, Plus, Trash2, Award } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import UserBadges from '../components/UserBadges';
+import { useSubscription } from '../context/SubscriptionContext';
 
 const Profile = () => {
   const { user } = useAuth();
+  const { activeSubscription, cancelSubscription, pauseSubscription, resumeSubscription } = useSubscription();
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -111,6 +113,78 @@ const Profile = () => {
 
         {/* Gamification: Badges & Achievements */}
         <UserBadges />
+
+        {/* Meal Prep Subscriptions Section */}
+        <div className="mt-8 bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            My Subscriptions
+          </h3>
+          
+          {activeSubscription ? (
+            <div className="border border-indigo-100 bg-indigo-50/50 rounded-2xl p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h4 className="text-xl font-bold text-gray-900">{activeSubscription.name}</h4>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      activeSubscription.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {activeSubscription.status}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm">{activeSubscription.mealsPerWeek} meals / week • {activeSubscription.dietary}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-black text-indigo-600">${activeSubscription.totalWeeklyCost.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500">per week</p>
+                </div>
+              </div>
+              
+              <div className="bg-white p-4 rounded-xl border border-gray-100 mb-6 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase">Next Delivery</p>
+                  <p className="font-medium text-gray-900">
+                    {new Date(activeSubscription.nextDelivery).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+                <Link to="/subscriptions" className="text-indigo-600 font-bold text-sm hover:underline">
+                  Change Plan
+                </Link>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {activeSubscription.status === 'Active' ? (
+                  <button 
+                    onClick={pauseSubscription}
+                    className="px-4 py-2 bg-yellow-100 text-yellow-700 font-bold rounded-lg hover:bg-yellow-200 transition"
+                  >
+                    Pause Subscription
+                  </button>
+                ) : (
+                  <button 
+                    onClick={resumeSubscription}
+                    className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-lg hover:bg-green-200 transition"
+                  >
+                    Resume Subscription
+                  </button>
+                )}
+                <button 
+                  onClick={cancelSubscription}
+                  className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-lg hover:bg-red-100 transition ml-auto"
+                >
+                  Cancel Plan
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50">
+              <p className="text-gray-500 mb-4">You are not currently subscribed to any meal plans.</p>
+              <Link to="/subscriptions" className="bg-primary text-white px-6 py-2 rounded-xl font-bold hover:bg-primary-dark transition">
+                Explore Meal Plans
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Address Book Section */}
         <div className="mt-8 bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
