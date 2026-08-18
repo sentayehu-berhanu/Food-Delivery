@@ -3,12 +3,14 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { ArrowRight, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcessing }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
   const { clearCart, cartItems } = useCart();
+  const { user } = useAuth();
   const [error, setError] = useState(null);
   const [isCardEmpty, setIsCardEmpty] = useState(true);
 
@@ -59,6 +61,24 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
 
       // 3. Save order to backend (Simulated)
       setTimeout(() => {
+        // Create mock order to show up in the Restaurant Dashboard
+        const newOrder = {
+          id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+          customerName: user ? user.name : 'Guest Customer',
+          restaurantEmail: cartItems[0]?.restaurantEmail || 'restaurant@test.com',
+          time: 'Just now',
+          items: cartItems.map(item => ({
+            name: item.name,
+            qty: item.quantity,
+            customizations: item.instructions || ''
+          })),
+          total: total,
+          status: 'PENDING'
+        };
+        const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
+        savedOrders.unshift(newOrder); // Add to beginning of array
+        localStorage.setItem('mockLiveOrders', JSON.stringify(savedOrders));
+
         navigate('/orders', { state: { message: `Payment successful! You paid $${total.toFixed(2)}.` } });
         setTimeout(() => {
           clearCart();

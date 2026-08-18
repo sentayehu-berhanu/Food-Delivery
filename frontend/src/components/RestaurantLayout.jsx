@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ListOrdered, MenuSquare, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
@@ -7,6 +7,12 @@ import NotificationDropdown from './NotificationDropdown';
 const RestaurantLayout = () => {
   const { logout, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/partner/login');
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/restaurant-dashboard', icon: <LayoutDashboard size={20} /> },
@@ -53,7 +59,7 @@ const RestaurantLayout = () => {
             </div>
           </div>
           <button 
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-2 w-full text-left rounded-lg text-sm font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut size={16} />

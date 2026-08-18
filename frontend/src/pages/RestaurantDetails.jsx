@@ -293,6 +293,7 @@ const RestaurantDetails = () => {
           food={selectedFood} 
           onClose={() => setSelectedFood(null)} 
           onAddToCart={handleAddToCart}
+          restaurantEmail={restaurant.email}
         />
       )}
 

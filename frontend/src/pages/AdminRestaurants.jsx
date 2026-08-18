@@ -7,10 +7,10 @@ const AdminRestaurants = () => {
     const saved = localStorage.getItem('mockRestaurants');
     if (saved) return JSON.parse(saved);
     return [
-      { id: '1', name: 'Pizza House', owner: 'John Manager', status: 'APPROVED', commission: '15%', sales: '$12,450' },
-      { id: '2', name: 'Burger Joint', owner: 'Mike Owner', status: 'APPROVED', commission: '15%', sales: '$8,320' },
-      { id: '3', name: 'Sushi Express', owner: 'Sarah Chef', status: 'PENDING_APPROVAL', commission: '12%', sales: '$0' },
-      { id: '4', name: 'Taco Fiesta', owner: 'Carlos G', status: 'SUSPENDED', commission: '15%', sales: '$45,200' },
+      { id: '1', name: 'Pizza House', owner: 'John Manager', email: 'john@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$12,450' },
+      { id: '2', name: 'Burger Joint', owner: 'Mike Owner', email: 'mike@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$8,320' },
+      { id: '3', name: 'Sushi Express', owner: 'Sarah Chef', email: 'sarah@restaurant.com', status: 'PENDING_APPROVAL', commission: '12%', sales: '$0' },
+      { id: '4', name: 'Taco Fiesta', owner: 'Carlos G', email: 'carlos@restaurant.com', status: 'SUSPENDED', commission: '15%', sales: '$45,200' },
     ];
   });
 
@@ -88,7 +88,7 @@ const AdminRestaurants = () => {
             {filterStatus !== 'ALL' && <span className="hidden sm:inline">{getStatusBadge(filterStatus)}</span>}
           </button>
           <button 
-            onClick={() => setEditingRestaurant({ name: '', owner: '', commission: '15%', isNew: true })}
+            onClick={() => setEditingRestaurant({ name: '', owner: '', email: '', password: '', commission: '15%', isNew: true })}
             className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap"
           >
             + Add Restaurant
@@ -124,7 +124,10 @@ const AdminRestaurants = () => {
                     <p className="font-bold text-gray-900">{restaurant.name}</p>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{restaurant.owner}</td>
+                <td className="px-6 py-4">
+                  <p className="text-sm text-gray-900 font-medium">{restaurant.owner}</p>
+                  <p className="text-xs text-gray-500">{restaurant.email || 'No email'}</p>
+                </td>
                 <td className="px-6 py-4">{getStatusBadge(restaurant.status)}</td>
                 <td className="px-6 py-4 font-medium text-gray-900">{restaurant.commission}</td>
                 <td className="px-6 py-4 font-medium text-gray-900">{restaurant.sales}</td>
@@ -165,9 +168,31 @@ const AdminRestaurants = () => {
                 <label className="block text-sm font-bold text-gray-700 mb-1">Owner Name</label>
                 <input 
                   className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
-                  value={editingRestaurant.owner} 
+                  value={editingRestaurant.owner || ''} 
                   onChange={e => setEditingRestaurant({...editingRestaurant, owner: e.target.value})} 
                   placeholder="e.g. Luigi Mario"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Owner Email (Username)</label>
+                <input 
+                  type="email"
+                  className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
+                  value={editingRestaurant.email || ''} 
+                  onChange={e => setEditingRestaurant({...editingRestaurant, email: e.target.value})} 
+                  placeholder="e.g. luigi@restaurant.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">
+                  {editingRestaurant.isNew ? 'Owner Password' : 'New Password (Leave blank to keep current)'}
+                </label>
+                <input 
+                  type="text"
+                  className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
+                  value={editingRestaurant.password || ''} 
+                  onChange={e => setEditingRestaurant({...editingRestaurant, password: e.target.value})} 
+                  placeholder={editingRestaurant.isNew ? "Set a password for login" : "Enter new password"}
                 />
               </div>
               <div>
@@ -193,24 +218,77 @@ const AdminRestaurants = () => {
               </button>
               <button 
                 className="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition shadow-lg shadow-orange-500/30" 
-                onClick={() => {
-                  if (!editingRestaurant.name || !editingRestaurant.owner) {
-                    alert('Please fill out all fields.');
+                onClick={async () => {
+                  if (!editingRestaurant.name || !editingRestaurant.owner || !editingRestaurant.email) {
+                    alert('Please fill out all required fields.');
                     return;
                   }
                   
                   if (editingRestaurant.isNew) {
-                    const saved = {
-                      id: Date.now().toString(),
-                      name: editingRestaurant.name,
-                      owner: editingRestaurant.owner,
-                      commission: editingRestaurant.commission,
-                      status: 'PENDING_APPROVAL',
-                      sales: '$0'
-                    };
-                    setRestaurants([saved, ...restaurants]);
+                    if (!editingRestaurant.password) {
+                      alert('Please provide a password for the new restaurant owner.');
+                      return;
+                    }
+
+                    try {
+                      // Register the user in the backend so they can actually log in!
+                      const response = await fetch('http://localhost:5000/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          name: editingRestaurant.owner,
+                          email: editingRestaurant.email,
+                          password: editingRestaurant.password,
+                          role: 'RESTAURANT'
+                        })
+                      });
+                      
+                      const data = await response.json();
+                      if (!response.ok) {
+                        alert(`Failed to create login account: ${data.message}`);
+                        return;
+                      }
+                      
+                      const saved = {
+                        id: Date.now().toString(),
+                        name: editingRestaurant.name,
+                        owner: editingRestaurant.owner,
+                        email: editingRestaurant.email,
+                        commission: editingRestaurant.commission,
+                        status: 'APPROVED', // Auto-approve if admin created it
+                        sales: '$0'
+                      };
+                      setRestaurants([saved, ...restaurants]);
+                      alert(`Successfully created restaurant and login account!\\n\\nUsername: ${editingRestaurant.email}\\nPassword: ${editingRestaurant.password}`);
+                    } catch (err) {
+                      alert('Network error while trying to create account.');
+                      return;
+                    }
                   } else {
-                    setRestaurants(restaurants.map(r => r.id === editingRestaurant.id ? { ...r, name: editingRestaurant.name, owner: editingRestaurant.owner, commission: editingRestaurant.commission } : r));
+                    if (editingRestaurant.password) {
+                      try {
+                        // Reset password in the backend mock DB
+                        await fetch('http://localhost:5000/api/auth/reset-password', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            email: editingRestaurant.email,
+                            newPassword: editingRestaurant.password
+                          })
+                        });
+                        alert('Password successfully updated!');
+                      } catch (err) {
+                        alert('Failed to update password in backend.');
+                      }
+                    }
+
+                    setRestaurants(restaurants.map(r => r.id === editingRestaurant.id ? { 
+                      ...r, 
+                      name: editingRestaurant.name, 
+                      owner: editingRestaurant.owner, 
+                      email: editingRestaurant.email,
+                      commission: editingRestaurant.commission 
+                    } : r));
                   }
                   setEditingRestaurant(null);
                   setSearchQuery('');

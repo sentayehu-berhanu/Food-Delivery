@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Clock, Check, X, ChefHat, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const DashboardOrders = () => {
+  const { user } = useAuth();
+  
   // Mock data for Phase 4 UI. This will be replaced with real data fetching.
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem('mockLiveOrders');
@@ -63,6 +66,13 @@ const DashboardOrders = () => {
   };
 
   const filteredOrders = orders.filter(order => {
+    // Only show orders belonging to this restaurant (using email in mock mode)
+    if (order.restaurantEmail && user && order.restaurantEmail !== user.email) {
+      // If it's a legacy mock order without an email, we'll let it show for now 
+      // so the dashboard isn't empty on first load, but new orders will be filtered.
+      return false;
+    }
+    
     if (order.status === 'REJECTED' || order.status === 'PICKED_UP') return false;
     if (activeFilter === 'ALL') return true;
     if (activeFilter === 'NEW' && order.status === 'PENDING') return true;

@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import RestaurantDetails from './pages/RestaurantDetails';
 import Login from './pages/Login';
+import PartnerLogin from './pages/PartnerLogin';
+import ForgotPassword from './pages/ForgotPassword';
 import Register from './pages/Register';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -42,6 +44,8 @@ function App() {
           </div>
         } />
         <Route path="/login" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Login /></main></div>} />
+        <Route path="/partner/login" element={<div className="min-h-screen bg-gray-50"><main><PartnerLogin /></main></div>} />
+        <Route path="/forgot-password" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><ForgotPassword /></main></div>} />
         <Route path="/register" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Register /></main></div>} />
         <Route path="/cart" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Cart /></main></div>} />
         <Route path="/checkout" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Checkout /></main></div>} />
