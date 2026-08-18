@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { MapPin, Navigation, Clock, Banknote } from 'lucide-react';
 
@@ -6,27 +6,44 @@ const DriverHome = () => {
   const { isOnline } = useOutletContext();
   const navigate = useNavigate();
 
-  // Mock available orders
-  const [availableOrders, setAvailableOrders] = useState([
-    {
-      id: 'ORD-1025',
-      restaurant: { name: 'Pizza House', address: 'Bole Road' },
-      customer: { address: 'Gerji, Addis Ababa' },
-      distance: '2.5 km',
-      timeEstimate: '15 min',
-      payout: 4.50
-    },
-    {
-      id: 'ORD-1026',
-      restaurant: { name: 'Burger Joint', address: 'Kazanchis' },
-      customer: { address: 'CMC, Addis Ababa' },
-      distance: '5.2 km',
-      timeEstimate: '25 min',
-      payout: 7.20
-    }
-  ]);
+  const [availableOrders, setAvailableOrders] = useState([]);
+
+  useEffect(() => {
+    // Pull real mock orders from localStorage (created by Checkout, managed by Restaurant)
+    const fetchOrders = () => {
+      const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
+      // Show orders that the restaurant is preparing or has ready
+      const driverOrders = savedOrders
+        .filter(o => o.status === 'PENDING' || o.status === 'PREPARING' || o.status === 'READY')
+        .map(o => ({
+          id: o.id,
+          restaurant: { name: o.restaurantEmail?.split('@')[0] || 'Local Restaurant', address: 'Bole, Addis Ababa' },
+          customer: { address: 'Customer Address' },
+          distance: '2.5 km',
+          timeEstimate: '15 min',
+          payout: parseFloat((o.total * 0.15).toFixed(2)) || 5.00
+        }));
+      setAvailableOrders(driverOrders);
+    };
+
+    fetchOrders();
+    
+    // Set up a tiny poller so the driver sees new orders if they leave the tab open
+    const interval = setInterval(fetchOrders, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const acceptOrder = (id) => {
+    // Update the order status in localStorage to PICKED_UP so it leaves the available pool
+    const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
+    const updatedOrders = savedOrders.map(o => {
+      if (o.id === id) {
+        return { ...o, status: 'PICKED_UP' };
+      }
+      return o;
+    });
+    localStorage.setItem('mockLiveOrders', JSON.stringify(updatedOrders));
+
     // In Phase 5 mock logic, we'll navigate to active order on accept
     navigate('/driver-dashboard/active');
   };

@@ -1,28 +1,62 @@
-import React, { useState } from 'react';
-import { Phone, MessageSquare, MapPin, Navigation, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Phone, MessageSquare, MapPin, Navigation, CheckCircle, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const DriverActiveOrder = () => {
   const navigate = useNavigate();
-  // Mock active order state
   const [orderState, setOrderState] = useState('HEADING_TO_RESTAURANT'); // HEADING_TO_RESTAURANT -> AT_RESTAURANT -> HEADING_TO_CUSTOMER -> DELIVERED
+  const markerRef = useRef(null);
 
-  const mockOrder = {
-    id: 'ORD-1025',
-    restaurant: { name: 'Pizza House', address: 'Bole Road, Building 4', phone: '+251 911 234567' },
-    customer: { name: 'John Doe', address: 'Gerji, Condominium Block 5, Apt 2B', phone: '+251 922 345678', instructions: 'Leave at the door and ring bell.' },
-    items: '1x Large Pizza, 2x Coke',
-    payout: 4.50
-  };
+  const [mockOrder, setMockOrder] = useState(null);
+
+  useEffect(() => {
+    const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
+    const active = savedOrders.find(o => o.status === 'PICKED_UP' || o.status === 'PREPARING'); // Just grab the first active one for mock
+    
+    if (active) {
+      setMockOrder({
+        id: active.id,
+        restaurant: { name: active.restaurantEmail?.split('@')[0] || 'Local Restaurant', address: 'Bole Road, Building 4', phone: '+251 911 234567' },
+        customer: { name: active.customerName, address: 'Gerji, Condominium Block 5, Apt 2B', phone: '+251 922 345678', instructions: 'Leave at the door and ring bell.' },
+        items: `${active.items} items`,
+        payout: parseFloat((active.total * 0.15).toFixed(2)) || 4.50,
+        originalOrder: active
+      });
+    } else {
+      // Fallback
+      setMockOrder({
+        id: 'ORD-1025',
+        restaurant: { name: 'Pizza House', address: 'Bole Road, Building 4', phone: '+251 911 234567' },
+        customer: { name: 'John Doe', address: 'Gerji, Condominium Block 5, Apt 2B', phone: '+251 922 345678', instructions: 'Leave at the door and ring bell.' },
+        items: '1x Large Pizza, 2x Coke',
+        payout: 4.50
+      });
+    }
+  }, []);
 
   const advanceState = () => {
     if (orderState === 'HEADING_TO_RESTAURANT') setOrderState('AT_RESTAURANT');
     else if (orderState === 'AT_RESTAURANT') setOrderState('HEADING_TO_CUSTOMER');
     else if (orderState === 'HEADING_TO_CUSTOMER') {
       setOrderState('DELIVERED');
+      
+      // Update in localStorage
+      if (mockOrder && mockOrder.originalOrder) {
+        const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
+        const updated = savedOrders.map(o => {
+          if (o.id === mockOrder.id) {
+            return { ...o, status: 'DELIVERED', driverPayout: mockOrder.payout, deliveredAt: new Date().toISOString() };
+          }
+          return o;
+        });
+        localStorage.setItem('mockLiveOrders', JSON.stringify(updated));
+      }
+      
       setTimeout(() => navigate('/driver-dashboard'), 2000);
     }
   };
+
+  if (!mockOrder) return null;
 
   if (orderState === 'DELIVERED') {
     return (
@@ -38,14 +72,42 @@ const DriverActiveOrder = () => {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-130px)]">
-      {/* Mock Map View */}
+      {/* Mock Interactive Map View */}
       <div className="h-64 bg-gray-200 relative w-full overflow-hidden shrink-0">
         <img 
           src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&auto=format&fit=crop&q=60" 
           alt="Map view" 
-          className="w-full h-full object-cover opacity-70"
+          className="w-full h-full object-cover opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
+        
+        {/* Route SVG */}
+        <svg className="absolute inset-0 w-full h-full z-0" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <path 
+            d="M 20,80 Q 40,50 50,50 T 80,20" 
+            stroke="#3b82f6" 
+            strokeWidth="2" 
+            fill="none" 
+            strokeDasharray="4 4"
+          />
+          {/* Restaurant Marker */}
+          <circle cx="50" cy="50" r="3" fill="#f97316" />
+          {/* Customer Marker */}
+          <circle cx="80" cy="20" r="3" fill="#22c55e" />
+        </svg>
+
+        {/* Animated Driver Marker */}
+        <div 
+          ref={markerRef}
+          className="absolute z-10 w-8 h-8 bg-primary rounded-full shadow-lg border-2 border-white flex items-center justify-center text-white transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out"
+          style={{
+            top: orderState === 'HEADING_TO_RESTAURANT' ? '80%' : orderState === 'AT_RESTAURANT' ? '50%' : '20%',
+            left: orderState === 'HEADING_TO_RESTAURANT' ? '20%' : orderState === 'AT_RESTAURANT' ? '50%' : '80%',
+          }}
+        >
+          <Car size={16} className={orderState === 'AT_RESTAURANT' ? 'animate-pulse' : ''} />
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent z-0"></div>
         <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-lg flex items-center gap-4">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
             <Navigation className="text-blue-600" />

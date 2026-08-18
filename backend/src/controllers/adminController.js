@@ -90,7 +90,7 @@ exports.getAllRestaurants = async (req, res) => {
 // Create User (Admin)
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, role, status } = req.body;
+    const { name, email, role, status, password } = req.body;
     let users = readDB();
     
     if (users.find(u => u.email === email)) {
@@ -103,6 +103,7 @@ exports.createUser = async (req, res) => {
       email,
       role: role || 'CUSTOMER',
       status: status || 'ACTIVE',
+      password: password || 'password123',
       createdAt: new Date().toISOString()
     };
 
@@ -126,6 +127,9 @@ exports.updateUser = async (req, res) => {
       users[index].email = req.body.email || users[index].email;
       users[index].role = req.body.role || users[index].role;
       users[index].status = req.body.status || users[index].status;
+      if (req.body.password) {
+        users[index].password = req.body.password;
+      }
 
       writeDB(users);
       res.json(users[index]);

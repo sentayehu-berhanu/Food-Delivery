@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Edit2, Trash2, Shield } from 'lucide-react';
+import { Search, Filter, MoreVertical, Edit2, Trash2, Shield, ShieldOff, Ban, CheckCircle } from 'lucide-react';
 
 const AdminUsers = () => {
   const [activeTab, setActiveTab] = useState('ALL');
@@ -23,14 +23,23 @@ const AdminUsers = () => {
       if (res.ok) {
         const data = await res.json();
         // Transform backend fields to match our UI mapping
-        const formattedUsers = data.map(u => ({
-          id: u._id,
-          name: u.name,
-          email: u.email,
-          role: u.role,
-          status: u.status,
-          joined: new Date(u.createdAt).toISOString().split('T')[0]
-        }));
+        const formattedUsers = data.map(u => {
+          let joinedDate = 'N/A';
+          try {
+            if (u.createdAt) {
+              joinedDate = new Date(u.createdAt).toISOString().split('T')[0];
+            }
+          } catch(e) {}
+          return {
+            id: u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            status: u.status,
+            password: u.password,
+            joined: joinedDate
+          };
+        });
         setUsers(formattedUsers);
       }
     } catch (error) {
@@ -56,6 +65,62 @@ const AdminUsers = () => {
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleQuickStatusChange = async (user, newStatus) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
+        },
+        body: JSON.stringify({ ...user, status: newStatus })
+      });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleQuickPromote = async (user) => {
+    if (!window.confirm(`Promote ${user.name} to ADMIN?`)) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
+        },
+        body: JSON.stringify({ ...user, role: 'ADMIN' })
+      });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === user.id ? { ...u, role: 'ADMIN' } : u));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleQuickDemote = async (user) => {
+    if (!window.confirm(`Demote ${user.name} to CUSTOMER?`)) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('foodgo_token')}`
+        },
+        body: JSON.stringify({ ...user, role: 'CUSTOMER' })
+      });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === user.id ? { ...u, role: 'CUSTOMER' } : u));
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -128,7 +193,7 @@ const AdminUsers = () => {
             {filterStatus !== 'ALL' && filterStatus}
           </button>
           <button 
-            onClick={() => setEditingUser({ name: '', email: '', role: 'CUSTOMER', status: 'ACTIVE', isNewUser: true })}
+            onClick={() => setEditingUser({ name: '', email: '', role: 'CUSTOMER', status: 'ACTIVE', password: '', isNewUser: true })}
             className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold transition flex items-center gap-2"
           >
             + Add User
@@ -176,7 +241,7 @@ const AdminUsers = () => {
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button 
-                      onClick={() => setEditingUser(user)}
+                      onClick={() => setEditingUser({...user, newPassword: ''})}
                       className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                     >
                       <Edit2 size={16} />
@@ -187,9 +252,40 @@ const AdminUsers = () => {
                     >
                       <Trash2 size={16} />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
-                      <MoreVertical size={16} />
-                    </button>
+                    {user.status === 'ACTIVE' ? (
+                      <button 
+                        onClick={() => handleQuickStatusChange(user, 'BANNED')}
+                        className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                        title="Ban User"
+                      >
+                        <Ban size={16} />
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleQuickStatusChange(user, 'ACTIVE')}
+                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                        title="Unban User"
+                      >
+                        <CheckCircle size={16} />
+                      </button>
+                    )}
+                    {user.role !== 'ADMIN' ? (
+                      <button 
+                        onClick={() => handleQuickPromote(user)}
+                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                        title="Promote to Admin"
+                      >
+                        <Shield size={16} />
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleQuickDemote(user)}
+                        className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+                        title="Demote to Customer"
+                      >
+                        <ShieldOff size={16} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -219,6 +315,27 @@ const AdminUsers = () => {
                   className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
                   value={editingUser.email} 
                   onChange={e => setEditingUser({...editingUser, email: e.target.value})} 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">
+                  {editingUser.isNewUser ? 'Password' : 'New Password'}
+                </label>
+                {!editingUser.isNewUser && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    Current password: <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{editingUser.password || 'password123'}</span>
+                  </p>
+                )}
+                <input 
+                  type="text"
+                  className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
+                  value={editingUser.isNewUser ? (editingUser.password || '') : (editingUser.newPassword || '')} 
+                  onChange={e => setEditingUser(
+                    editingUser.isNewUser 
+                      ? {...editingUser, password: e.target.value}
+                      : {...editingUser, newPassword: e.target.value}
+                  )} 
+                  placeholder={editingUser.isNewUser ? "Set a password for login" : "Leave blank to keep current password"}
                 />
               </div>
               <div>
@@ -269,19 +386,28 @@ const AdminUsers = () => {
                         name: editingUser.name,
                         email: editingUser.email,
                         role: editingUser.role,
-                        status: editingUser.status
+                        status: editingUser.status,
+                        password: editingUser.isNewUser ? editingUser.password : (editingUser.newPassword || editingUser.password)
                       })
                     });
 
                     if (res.ok) {
                       const data = await res.json();
+                      let joinedDate = 'N/A';
+                      try {
+                        if (data.createdAt) {
+                          joinedDate = new Date(data.createdAt).toISOString().split('T')[0];
+                        }
+                      } catch(e) {}
+                      
                       const savedUser = {
                         id: data._id,
                         name: data.name,
                         email: data.email,
                         role: data.role,
                         status: data.status,
-                        joined: new Date(data.createdAt).toISOString().split('T')[0]
+                        password: data.password,
+                        joined: joinedDate
                       };
 
                       if (editingUser.isNewUser) {

@@ -48,8 +48,10 @@ const Cart = () => {
               </div>
               
               <div className="divide-y divide-gray-100">
-                {cartItems.map((item) => (
-                  <div key={item.cartId} className="p-6 flex flex-col sm:flex-row gap-4">
+                {cartItems.map((item) => {
+                  const displayPrice = item.totalPrice || item.price || item.basePrice || 0;
+                  return (
+                    <div key={item.cartId} className="p-6 flex flex-col sm:flex-row gap-4">
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
@@ -63,7 +65,7 @@ const Cart = () => {
                       
                       <div className="text-sm text-gray-500 mb-4 space-y-1">
                         {item.size && <p>Size: {item.size.name}</p>}
-                        {item.toppings.length > 0 && (
+                        {item.toppings && item.toppings.length > 0 && (
                           <p>Toppings: {item.toppings.map(t => t.name).join(', ')}</p>
                         )}
                         {item.sauce && <p>Sauce: {item.sauce.name}</p>}
@@ -86,11 +88,12 @@ const Cart = () => {
                             <Plus size={14} />
                           </button>
                         </div>
-                        <span className="font-bold text-lg text-gray-900">${item.totalPrice.toFixed(2)}</span>
+                        <span className="font-bold text-lg text-gray-900">${displayPrice.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

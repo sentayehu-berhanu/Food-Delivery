@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
-import { Star, Clock, Info, Search, Filter } from 'lucide-react';
+import { Star, Clock, Info, Search, Filter, Leaf, WheatOff } from 'lucide-react';
 import FoodCard from '../components/FoodCard';
 import FoodModal from '../components/FoodModal';
 import RestaurantInfoModal from '../components/RestaurantInfoModal';
+import FavoriteButton from '../components/FavoriteButton';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,6 +32,8 @@ const MOCK_MENU = [
     description: 'Fresh tomato, mozzarella, and basil on a crispy thin crust.',
     price: 12.00,
     image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&auto=format&fit=crop&q=60',
+    calories: '🔥 850 kcal',
+    dietary: ['Vegetarian'],
     sizes: [
       { name: 'Regular (10")', price: 12.00 },
       { name: 'Large (14")', price: 16.00 }
@@ -53,6 +56,8 @@ const MOCK_MENU = [
     description: 'Beef patty, american cheese, lettuce, tomato, and our secret sauce.',
     price: 10.00,
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60',
+    calories: '🔥 720 kcal',
+    dietary: [],
     sizes: [
       { name: 'Single', price: 10.00 },
       { name: 'Double', price: 13.50 }
@@ -75,6 +80,8 @@ const MOCK_MENU = [
     description: 'Oven baked bread topped with garlic, butter and herbs.',
     price: 5.50,
     image: null,
+    calories: '🔥 320 kcal',
+    dietary: ['Vegetarian', 'Vegan'],
     sizes: [],
     toppings: [
       { id: 't7', name: 'Add Cheese', price: 1.50 }
@@ -87,11 +94,14 @@ const RestaurantDetails = () => {
   const { id } = useParams();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dietFilter, setDietFilter] = useState('All');
   const [selectedFood, setSelectedFood] = useState(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
   const [restaurant, setRestaurant] = useState(MOCK_RESTAURANT);
   const [menuItems, setMenuItems] = useState(MOCK_MENU);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(restaurant.rating);
   
   const headerRef = useRef(null);
   const menuRef = useRef(null);
@@ -114,7 +124,7 @@ const RestaurantDetails = () => {
           categories: ['Popular', 'Burgers', 'Pizza', 'Appetizers', 'Drinks', 'Desserts'],
           address: '123 Partner Lane',
           phone: '(555) 123-4567',
-          email: 'contact@partner.com'
+          email: found.email || 'contact@partner.com'
         });
       }
     }
@@ -123,13 +133,19 @@ const RestaurantDetails = () => {
     const savedMenu = localStorage.getItem('mockMenuItems');
     if (savedMenu) {
       const parsedMenu = JSON.parse(savedMenu);
-      const formattedMenu = parsedMenu.map(m => ({
+      // Filter by this restaurant's ID (or fall back if restaurantId missing)
+      const thisRestaurantMenu = parsedMenu.filter(m => !m.restaurantId || m.restaurantId.toString() === id?.toString());
+      
+      const formattedMenu = thisRestaurantMenu.map(m => ({
         id: m.id,
         category: m.category || 'Popular',
         name: m.name,
-        description: 'Freshly prepared daily.',
+        description: m.description || 'Freshly prepared daily.',
         price: m.price,
         image: m.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500',
+        status: m.status || 'Available',
+        calories: m.calories,
+        dietary: m.dietary || [],
         sizes: [],
         toppings: [],
         sauces: []
@@ -137,6 +153,16 @@ const RestaurantDetails = () => {
       if (formattedMenu.length > 0) {
         setMenuItems(formattedMenu);
       }
+    }
+
+    // Load Reviews
+    const allReviews = JSON.parse(localStorage.getItem('restaurantReviews') || '[]');
+    const myReviews = allReviews.filter(r => r.restaurantId?.toString() === id?.toString());
+    setReviews(myReviews);
+    
+    if (myReviews.length > 0) {
+      const sum = myReviews.reduce((acc, curr) => acc + curr.rating, 0);
+      setAverageRating((sum / myReviews.length).toFixed(1));
     }
   }, [id]);
 
@@ -173,7 +199,8 @@ const RestaurantDetails = () => {
   const filteredMenu = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    return matchesSearch && (searchQuery ? true : matchesCategory); // If searching, ignore category filter
+    const matchesDiet = dietFilter === 'All' || (item.dietary && item.dietary.includes(dietFilter));
+    return matchesSearch && (searchQuery ? true : matchesCategory) && matchesDiet;
   });
 
   return (
@@ -192,13 +219,16 @@ const RestaurantDetails = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-16">
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">{restaurant.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">{restaurant.name}</h1>
+                <FavoriteButton restaurantId={restaurant.id} />
+              </div>
               <p className="text-gray-500 mb-4">{restaurant.tags}</p>
               
               <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg">
                   <Star size={16} className="fill-yellow-500 text-yellow-500" />
-                  <span>{restaurant.rating} (500+ ratings)</span>
+                  <span>{averageRating} ({reviews.length > 0 ? reviews.length : '500+'} ratings)</span>
                 </div>
                 <div className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg">
                   <Clock size={16} className="text-gray-500" />
@@ -264,6 +294,34 @@ const RestaurantDetails = () => {
 
           {/* Menu Items */}
           <div className="lg:w-3/4" ref={menuRef}>
+            
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button 
+                onClick={() => setDietFilter('All')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${dietFilter === 'All' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                All
+              </button>
+              <button 
+                onClick={() => setDietFilter('Vegan')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegan' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'}`}
+              >
+                <Leaf size={14} /> Vegan
+              </button>
+              <button 
+                onClick={() => setDietFilter('Vegetarian')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegetarian' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-green-600 border border-green-200 hover:bg-green-50'}`}
+              >
+                <Leaf size={14} /> Vegetarian
+              </button>
+              <button 
+                onClick={() => setDietFilter('Gluten-Free')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Gluten-Free' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50'}`}
+              >
+                <WheatOff size={14} /> Gluten-Free
+              </button>
+            </div>
+
             <div className="mb-6 flex justify-between items-end">
               <h2 className="text-2xl font-bold text-gray-900">
                 {searchQuery ? 'Search Results' : activeCategory}
@@ -277,12 +335,53 @@ const RestaurantDetails = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredMenu.map(food => (
-                  <div key={food.id} className="menu-item-card h-full">
+                  <div 
+                    key={food.id} 
+                    className={`menu-item-card h-full ${food.status === 'Out of Stock' ? 'opacity-50 grayscale pointer-events-none relative' : ''}`}
+                  >
+                    {food.status === 'Out of Stock' && (
+                      <div className="absolute top-4 right-4 z-20 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+                        OUT OF STOCK
+                      </div>
+                    )}
                     <FoodCard food={food} onClick={handleFoodClick} />
                   </div>
                 ))}
               </div>
             )}
+            
+            {/* Reviews Section */}
+            {reviews.length > 0 && (
+              <div className="mt-16 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <Star className="text-yellow-400 fill-yellow-400" /> 
+                  Customer Reviews
+                </h2>
+                <div className="space-y-6">
+                  {reviews.map(review => (
+                    <div key={review.id} className="border-b border-gray-50 pb-6 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-bold text-gray-900">{review.customerName}</p>
+                          <p className="text-xs text-gray-500">{new Date(review.date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              size={14} 
+                              className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {review.text && <p className="text-gray-700 text-sm mt-2">{review.text}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
           </div>
         </div>
       </div>

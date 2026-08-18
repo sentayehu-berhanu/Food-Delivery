@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import RestaurantDetails from './pages/RestaurantDetails';
@@ -10,6 +12,7 @@ import Register from './pages/Register';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
+import Profile from './pages/Profile';
 import RestaurantLayout from './components/RestaurantLayout';
 import DashboardHome from './pages/DashboardHome';
 import DashboardOrders from './pages/DashboardOrders';
@@ -19,10 +22,13 @@ import DriverLayout from './components/DriverLayout';
 import DriverHome from './pages/DriverHome';
 import DriverActiveOrder from './pages/DriverActiveOrder';
 import DriverEarnings from './pages/DriverEarnings';
+import DriverProfile from './pages/DriverProfile';
 import AdminLayout from './components/AdminLayout';
 import AdminHome from './pages/AdminHome';
 import AdminUsers from './pages/AdminUsers';
 import AdminRestaurants from './pages/AdminRestaurants';
+import AdminSettings from './pages/AdminSettings';
+import DashboardPromos from './pages/DashboardPromos';
 
 function App() {
   return (
@@ -50,12 +56,13 @@ function App() {
         <Route path="/cart" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Cart /></main></div>} />
         <Route path="/checkout" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Checkout /></main></div>} />
         <Route path="/orders" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Orders /></main></div>} />
+        <Route path="/profile" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><Profile /></main></div>} />
 
-        {/* Restaurant Dashboard Routes */}
         <Route path="/restaurant-dashboard" element={<RestaurantLayout />}>
           <Route index element={<DashboardHome />} />
           <Route path="orders" element={<DashboardOrders />} />
           <Route path="menu" element={<DashboardMenu />} />
+          <Route path="promos" element={<DashboardPromos />} />
           <Route path="settings" element={<DashboardSettings />} />
         </Route>
 
@@ -64,7 +71,7 @@ function App() {
           <Route index element={<DriverHome />} />
           <Route path="active" element={<DriverActiveOrder />} />
           <Route path="earnings" element={<DriverEarnings />} />
-          <Route path="profile" element={<div className="p-6 text-center text-gray-500">Profile Settings Coming Soon</div>} />
+          <Route path="profile" element={<DriverProfile />} />
         </Route>
 
         {/* Admin Dashboard Routes */}
@@ -72,9 +79,21 @@ function App() {
           <Route index element={<AdminHome />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="restaurants" element={<AdminRestaurants />} />
-          <Route path="settings" element={<div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100">Platform Settings Coming Soon</div>} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>
+      <ToastContainer 
+        position="top-right" 
+        autoClose={4000} 
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

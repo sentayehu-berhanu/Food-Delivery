@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ListOrdered, MenuSquare, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, MenuSquare, Settings, LogOut, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -18,6 +18,7 @@ const RestaurantLayout = () => {
     { name: 'Dashboard', path: '/restaurant-dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Live Orders', path: '/restaurant-dashboard/orders', icon: <ListOrdered size={20} /> },
     { name: 'Menu Management', path: '/restaurant-dashboard/menu', icon: <MenuSquare size={20} /> },
+    { name: 'Promotions', path: '/restaurant-dashboard/promos', icon: <Tag size={20} /> },
     { name: 'Settings', path: '/restaurant-dashboard/settings', icon: <Settings size={20} /> },
   ];
 
@@ -49,7 +50,7 @@ const RestaurantLayout = () => {
         </div>
 
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
+          <Link to="/restaurant-dashboard/settings" className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-primary font-bold">
               {user?.name?.charAt(0) || 'R'}
             </div>
@@ -57,7 +58,7 @@ const RestaurantLayout = () => {
               <p className="text-sm font-bold text-gray-900">{user?.name || 'Restaurant Name'}</p>
               <p className="text-xs text-gray-500">Owner</p>
             </div>
-          </div>
+          </Link>
           <button 
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-2 w-full text-left rounded-lg text-sm font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors"

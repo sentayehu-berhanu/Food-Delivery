@@ -7,10 +7,10 @@ const AdminRestaurants = () => {
     const saved = localStorage.getItem('mockRestaurants');
     if (saved) return JSON.parse(saved);
     return [
-      { id: '1', name: 'Pizza House', owner: 'John Manager', email: 'john@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$12,450' },
-      { id: '2', name: 'Burger Joint', owner: 'Mike Owner', email: 'mike@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$8,320' },
-      { id: '3', name: 'Sushi Express', owner: 'Sarah Chef', email: 'sarah@restaurant.com', status: 'PENDING_APPROVAL', commission: '12%', sales: '$0' },
-      { id: '4', name: 'Taco Fiesta', owner: 'Carlos G', email: 'carlos@restaurant.com', status: 'SUSPENDED', commission: '15%', sales: '$45,200' },
+      { id: '1', name: 'Pizza House', owner: 'John Manager', email: 'john@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$12,450', password: 'password123' },
+      { id: '2', name: 'Burger Joint', owner: 'Mike Owner', email: 'mike@restaurant.com', status: 'APPROVED', commission: '15%', sales: '$8,320', password: 'password123' },
+      { id: '3', name: 'Sushi Express', owner: 'Sarah Chef', email: 'sarah@restaurant.com', status: 'PENDING_APPROVAL', commission: '12%', sales: '$0', password: 'password123' },
+      { id: '4', name: 'Taco Fiesta', owner: 'Carlos G', email: 'carlos@restaurant.com', status: 'SUSPENDED', commission: '15%', sales: '$45,200', password: 'password123' },
     ];
   });
 
@@ -139,7 +139,7 @@ const AdminRestaurants = () => {
                         <button onClick={() => handleReject(restaurant.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Reject"><XCircle size={18} /></button>
                       </>
                     )}
-                    <button onClick={() => setEditingRestaurant(restaurant)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit"><Edit2 size={16} /></button>
+                    <button onClick={() => setEditingRestaurant({...restaurant, newPassword: ''})} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit"><Edit2 size={16} /></button>
                     <button onClick={() => handleDelete(restaurant.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete"><Trash2 size={16} /></button>
                   </div>
                 </td>
@@ -185,14 +185,23 @@ const AdminRestaurants = () => {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">
-                  {editingRestaurant.isNew ? 'Owner Password' : 'New Password (Leave blank to keep current)'}
+                  {editingRestaurant.isNew ? 'Owner Password' : 'New Password'}
                 </label>
+                {!editingRestaurant.isNew && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    Current password: <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{editingRestaurant.password || 'password123'}</span>
+                  </p>
+                )}
                 <input 
                   type="text"
                   className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
-                  value={editingRestaurant.password || ''} 
-                  onChange={e => setEditingRestaurant({...editingRestaurant, password: e.target.value})} 
-                  placeholder={editingRestaurant.isNew ? "Set a password for login" : "Enter new password"}
+                  value={editingRestaurant.isNew ? (editingRestaurant.password || '') : (editingRestaurant.newPassword || '')} 
+                  onChange={e => setEditingRestaurant(
+                    editingRestaurant.isNew 
+                      ? {...editingRestaurant, password: e.target.value}
+                      : {...editingRestaurant, newPassword: e.target.value}
+                  )} 
+                  placeholder={editingRestaurant.isNew ? "Set a password for login" : "Leave blank to keep current password"}
                 />
               </div>
               <div>
@@ -256,7 +265,8 @@ const AdminRestaurants = () => {
                         email: editingRestaurant.email,
                         commission: editingRestaurant.commission,
                         status: 'APPROVED', // Auto-approve if admin created it
-                        sales: '$0'
+                        sales: '$0',
+                        password: editingRestaurant.password
                       };
                       setRestaurants([saved, ...restaurants]);
                       alert(`Successfully created restaurant and login account!\\n\\nUsername: ${editingRestaurant.email}\\nPassword: ${editingRestaurant.password}`);
@@ -265,7 +275,9 @@ const AdminRestaurants = () => {
                       return;
                     }
                   } else {
-                    if (editingRestaurant.password) {
+                    let updatedPassword = editingRestaurant.password; // Keep old password by default
+
+                    if (editingRestaurant.newPassword) {
                       try {
                         // Reset password in the backend mock DB
                         await fetch('http://localhost:5000/api/auth/reset-password', {
@@ -273,9 +285,10 @@ const AdminRestaurants = () => {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             email: editingRestaurant.email,
-                            newPassword: editingRestaurant.password
+                            newPassword: editingRestaurant.newPassword
                           })
                         });
+                        updatedPassword = editingRestaurant.newPassword;
                         alert('Password successfully updated!');
                       } catch (err) {
                         alert('Failed to update password in backend.');
@@ -287,7 +300,8 @@ const AdminRestaurants = () => {
                       name: editingRestaurant.name, 
                       owner: editingRestaurant.owner, 
                       email: editingRestaurant.email,
-                      commission: editingRestaurant.commission 
+                      commission: editingRestaurant.commission,
+                      password: updatedPassword
                     } : r));
                   }
                   setEditingRestaurant(null);

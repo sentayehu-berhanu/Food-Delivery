@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcessing }) => {
+const CheckoutForm = ({ address, instructions, total, deliveryType, scheduledDate, scheduledTime, isProcessing, setIsProcessing, rewardPoints, usePoints }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -66,18 +66,28 @@ const CheckoutForm = ({ address, instructions, total, isProcessing, setIsProcess
           id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
           customerName: user ? user.name : 'Guest Customer',
           restaurantEmail: cartItems[0]?.restaurantEmail || 'restaurant@test.com',
-          time: 'Just now',
+          restaurantId: cartItems[0]?.restaurantId || '1',
+          restaurantName: cartItems[0]?.restaurantName || 'Restaurant',
+          time: deliveryType === 'SCHEDULED' ? `Scheduled for ${scheduledDate} at ${scheduledTime}` : 'Just now',
           items: cartItems.map(item => ({
             name: item.name,
             qty: item.quantity,
             customizations: item.instructions || ''
           })),
+          originalCartItems: cartItems,
           total: total,
           status: 'PENDING'
         };
         const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
         savedOrders.unshift(newOrder); // Add to beginning of array
         localStorage.setItem('mockLiveOrders', JSON.stringify(savedOrders));
+
+        if (user) {
+          let newPoints = rewardPoints || 0;
+          if (usePoints && newPoints >= 500) newPoints -= 500;
+          newPoints += Math.floor(total * 10);
+          localStorage.setItem(`mockRewards_${user.id}`, newPoints.toString());
+        }
 
         navigate('/orders', { state: { message: `Payment successful! You paid $${total.toFixed(2)}.` } });
         setTimeout(() => {

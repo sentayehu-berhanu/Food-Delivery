@@ -48,7 +48,7 @@ export const CartProvider = ({ children }) => {
       if (item.cartId === cartId) {
         // Recalculate price
         const basePrice = item.size ? item.size.price : item.basePrice;
-        const toppingsPrice = item.toppings.reduce((sum, top) => sum + top.price, 0);
+        const toppingsPrice = (item.toppings || []).reduce((sum, top) => sum + top.price, 0);
         const newTotal = (basePrice + toppingsPrice) * newQuantity;
         
         return { ...item, quantity: newQuantity, totalPrice: newTotal };
@@ -61,8 +61,12 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
+  const replaceCart = (items) => {
+    setCartItems(items);
+  };
+
   // Calculations
-  const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.totalPrice || item.price || item.basePrice || 0), 0);
   const deliveryFee = subtotal > 0 ? 3.00 : 0;
   const serviceFee = subtotal > 0 ? 2.00 : 0;
   const tax = subtotal * 0.1; // 10% tax
@@ -76,6 +80,7 @@ export const CartProvider = ({ children }) => {
       removeFromCart,
       updateQuantity,
       clearCart,
+      replaceCart,
       subtotal,
       deliveryFee,
       serviceFee,

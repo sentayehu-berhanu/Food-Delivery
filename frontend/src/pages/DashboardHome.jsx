@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, Clock, DollarSign } from 'lucide-react';
 import RevenueChart from '../components/RevenueChart';
+import TopItemsChart from '../components/TopItemsChart';
 
 const DashboardHome = () => {
   const [statsData, setStatsData] = useState(null);
@@ -34,6 +35,13 @@ const DashboardHome = () => {
             { date: 'Fri', revenue: 500, orders: 15 },
             { date: 'Sat', revenue: 900, orders: 28 },
             { date: 'Sun', revenue: 700, orders: 20 },
+          ],
+          topItems: [
+            { name: 'Spicy Burger', sales: 120 },
+            { name: 'Cheese Pizza', sales: 98 },
+            { name: 'Vegan Bowl', sales: 86 },
+            { name: 'BBQ Wings', sales: 75 },
+            { name: 'Curly Fries', sales: 65 }
           ]
         });
       } finally {
@@ -114,6 +122,22 @@ const DashboardHome = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Top Items Row */}
+      <div className="grid grid-cols-1 gap-8">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[400px] flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-900 text-lg">Top Selling Items</h3>
+            <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none">
+              <option>This Week</option>
+              <option>This Month</option>
+            </select>
+          </div>
+          <div className="flex-1">
+            <TopItemsChart data={statsData.topItems} />
           </div>
         </div>
       </div>

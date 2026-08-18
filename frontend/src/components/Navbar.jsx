@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, MapPin, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, User, MapPin, LogOut, Moon, Sun } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useLocationContext } from '../context/LocationContext';
 import NotificationDropdown from './NotificationDropdown';
 import LocationModal from './LocationModal';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
@@ -23,36 +25,37 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed w-full z-50 glass border-b border-gray-100">
+    <nav className="fixed w-full z-50 glass dark:glass-dark shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="text-3xl font-bold text-primary flex items-center gap-2">
-              <span className="text-4xl">🍔</span> FoodGo
+            <Link to="/" className="text-3xl font-bold flex items-center gap-2 group">
+              <span className="text-4xl group-hover:scale-110 transition-transform">🍔</span> 
+              <span className="gradient-text font-black tracking-tight dark:text-white dark:bg-none dark:[-webkit-text-fill-color:white]">FoodGo</span>
             </Link>
           </div>
 
           {/* Location Picker */}
           <div 
             onClick={() => setIsLocationModalOpen(true)}
-            className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition max-w-[250px]"
+            className="hidden md:flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-5 py-2.5 rounded-full border border-gray-100 dark:border-slate-700 shadow-sm cursor-pointer hover:bg-white dark:hover:bg-slate-700 hover:shadow-md hover:-translate-y-0.5 transition-all max-w-[280px]"
           >
-            <MapPin size={18} className="text-primary flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-700 truncate">
-              Deliver to: <span className="font-bold">{deliveryLocation}</span>
+            <MapPin size={20} className="text-primary flex-shrink-0" />
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
+              Deliver to: <span className="font-bold text-gray-900 dark:text-white">{deliveryLocation}</span>
             </span>
           </div>
 
           {/* Search Bar */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={18} className="text-gray-400" />
+          <div className="hidden lg:flex flex-1 max-w-lg mx-8">
+            <div className="relative w-full group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search size={20} className="text-gray-400 group-focus-within:text-primary transition-colors" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-full leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                className="block w-full pl-12 pr-4 py-3 border-0 rounded-full leading-5 bg-gray-100/80 dark:bg-slate-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary shadow-inner transition-all"
                 placeholder="Search for restaurants or food..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -65,26 +68,33 @@ const Navbar = () => {
           <div className="flex items-center gap-6">
             {user ? (
               <div className="flex items-center gap-4">
-                <Link to="/profile" className="text-gray-700 hover:text-primary font-medium transition flex items-center gap-2">
-                  <User size={20} />
+                <Link to="/profile" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary font-semibold transition-colors flex items-center gap-2">
+                  <User size={22} />
                   <span className="hidden sm:inline">{user.name}</span>
                 </Link>
-                <button onClick={logout} className="text-gray-500 hover:text-red-500 transition">
-                  <LogOut size={20} />
+                <button onClick={logout} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                  <LogOut size={22} />
                 </button>
                 <NotificationDropdown />
               </div>
             ) : (
-              <Link to="/login" className="text-gray-700 hover:text-primary font-medium transition flex items-center gap-2">
-                <User size={20} />
+              <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-primary font-semibold transition-colors flex items-center gap-2">
+                <User size={22} />
                 <span className="hidden sm:inline">Login</span>
               </Link>
             )}
             
-            <Link to="/cart" className="relative p-2 text-gray-700 hover:text-primary transition bg-gray-50 rounded-full hover:bg-orange-50">
+            <button 
+              onClick={toggleTheme} 
+              className="text-gray-700 hover:text-primary transition-colors flex items-center justify-center dark:text-gray-300 dark:hover:text-primary"
+            >
+              {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
+            </button>
+            
+            <Link to="/cart" className="relative p-2.5 text-gray-700 hover:text-primary transition-all bg-white rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-gray-800 dark:text-gray-300">
               <ShoppingCart size={24} />
               {itemCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary rounded-full">
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary rounded-full shadow-lg">
                   {itemCount}
                 </span>
               )}

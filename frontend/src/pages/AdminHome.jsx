@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Store, DollarSign, Activity, ArrowUpRight } from 'lucide-react';
 import RevenueChart from '../components/RevenueChart';
+import ActiveUsersChart from '../components/ActiveUsersChart';
 
 const AdminHome = () => {
   const [statsData, setStatsData] = useState(null);
@@ -39,7 +40,17 @@ const AdminHome = () => {
             { date: '2023-10-04', revenue: 2100, orders: 61 },
             { date: '2023-10-05', revenue: 1900, orders: 55 },
             { date: '2023-10-06', revenue: 2400, orders: 70 },
+            { date: '2023-10-06', revenue: 2400, orders: 70 },
             { date: '2023-10-07', revenue: 2800, orders: 85 },
+          ],
+          activeUsersData: [
+            { date: '2023-10-01', users: 800 },
+            { date: '2023-10-02', users: 850 },
+            { date: '2023-10-03', users: 790 },
+            { date: '2023-10-04', users: 950 },
+            { date: '2023-10-05', users: 1020 },
+            { date: '2023-10-06', users: 1100 },
+            { date: '2023-10-07', users: 1204 },
           ]
         });
       } finally {
@@ -116,6 +127,21 @@ const AdminHome = () => {
           >
             {showAllActivity ? 'Show Less' : 'View All Activity'}
           </button>
+        </div>
+      </div>
+      {/* Active Users Chart */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[400px] flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-900">Active Users Over Time</h3>
+            <select className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 text-sm font-medium focus:outline-none">
+              <option>Last 7 Days</option>
+              <option>This Month</option>
+            </select>
+          </div>
+          <div className="flex-1">
+            <ActiveUsersChart data={statsData.activeUsersData} />
+          </div>
         </div>
       </div>
     </div>

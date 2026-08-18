@@ -17,9 +17,9 @@ const DashboardMenu = () => {
     const saved = localStorage.getItem('mockMenuItems');
     if (saved) return JSON.parse(saved);
     return [
-      { id: '1', restaurantId: '1', name: 'Classic Burger', category: 'Burgers', price: 12.99, status: 'Available', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
-      { id: '2', restaurantId: '1', name: 'Cheese Pizza', category: 'Pizza', price: 14.99, status: 'Available', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60' },
-      { id: '3', restaurantId: '1', name: 'Spicy Wings', category: 'Appetizers', price: 9.99, status: 'Out of Stock', image: 'https://images.unsplash.com/photo-1524114664604-cd8133cd67ad?w=500&auto=format&fit=crop&q=60' }
+      { id: '1', restaurantId: '1', name: 'Classic Burger', category: 'Burgers', description: 'Beef patty, american cheese, lettuce, tomato, and our secret sauce.', price: 12.99, status: 'Available', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+      { id: '2', restaurantId: '1', name: 'Cheese Pizza', category: 'Pizza', description: 'Fresh tomato, mozzarella, and basil on a crispy thin crust.', price: 14.99, status: 'Available', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60' },
+      { id: '3', restaurantId: '1', name: 'Spicy Wings', category: 'Appetizers', description: 'Crispy fried wings tossed in our signature spicy sauce.', price: 9.99, status: 'Out of Stock', image: 'https://images.unsplash.com/photo-1524114664604-cd8133cd67ad?w=500&auto=format&fit=crop&q=60' }
     ];
   });
 
@@ -66,7 +66,7 @@ const DashboardMenu = () => {
           </select>
         </div>
         <button 
-          onClick={() => setEditingItem({ name: '', category: 'Burgers', price: '', status: 'Available', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500', isNew: true })}
+          onClick={() => setEditingItem({ name: '', category: 'Burgers', description: '', price: '', status: 'Available', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500', isNew: true })}
           className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md shadow-orange-500/20 w-full sm:w-auto justify-center"
         >
           <Plus size={20} /> Add New Item
@@ -181,6 +181,15 @@ const DashboardMenu = () => {
                   onChange={e => setEditingItem({...editingItem, name: e.target.value})} 
                 />
               </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                <textarea 
+                  className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition resize-none h-24" 
+                  value={editingItem.description || ''} 
+                  onChange={e => setEditingItem({...editingItem, description: e.target.value})} 
+                  placeholder="Describe your item..."
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
@@ -207,16 +216,41 @@ const DashboardMenu = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Status</label>
-                <select 
-                  className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
-                  value={editingItem.status} 
-                  onChange={e => setEditingItem({...editingItem, status: e.target.value})}
-                >
-                  <option value="Available">Available</option>
-                  <option value="Out of Stock">Out of Stock</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Status</label>
+                  <select 
+                    className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:outline-none transition" 
+                    value={editingItem.status} 
+                    onChange={e => setEditingItem({...editingItem, status: e.target.value})}
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Item Image</label>
+                  <div className="flex items-center gap-3">
+                    {editingItem.image && editingItem.image.startsWith('data:') && (
+                      <img src={editingItem.image} alt="Preview" className="w-12 h-12 rounded-lg object-cover shadow-sm" />
+                    )}
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition cursor-pointer"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setEditingItem({...editingItem, image: reader.result});
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }} 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="mt-8 flex justify-end gap-3">
@@ -239,14 +273,22 @@ const DashboardMenu = () => {
                       id: Date.now().toString(),
                       restaurantId: activeRestaurantId,
                       name: editingItem.name,
+                      description: editingItem.description,
                       category: editingItem.category,
                       price: parseFloat(editingItem.price),
                       status: editingItem.status,
-                      image: editingItem.image
+                      image: editingItem.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300'
                     };
                     setMenuItems([saved, ...menuItems]);
                   } else {
-                    setMenuItems(menuItems.map(i => i.id === editingItem.id ? { ...i, name: editingItem.name, category: editingItem.category, price: parseFloat(editingItem.price), status: editingItem.status } : i));
+                    setMenuItems(menuItems.map(i => i.id === editingItem.id ? { 
+                      ...i, 
+                      name: editingItem.name, 
+                      category: editingItem.category, 
+                      description: editingItem.description || '',
+                      price: parseFloat(editingItem.price), 
+                      status: editingItem.status 
+                    } : i));
                   }
                   setEditingItem(null);
                   setSearchQuery('');

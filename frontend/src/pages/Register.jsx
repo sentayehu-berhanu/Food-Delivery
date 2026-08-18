@@ -16,17 +16,24 @@ const Register = () => {
     setError('');
     
     if (name && email && password) {
-      // Mock successful registration
-      const mockToken = 'mock-jwt-token-register';
-      const mockUser = {
-        id: '1',
-        name,
-        email,
-        role: 'CUSTOMER'
-      };
-      
-      login(mockToken, mockUser);
-      navigate('/');
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role: 'CUSTOMER' })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          login(data.token, data);
+          navigate('/');
+        } else {
+          setError(data.message || 'Registration failed');
+        }
+      } catch (err) {
+        setError('Failed to connect to server');
+      }
     } else {
       setError('Please fill in all fields');
     }

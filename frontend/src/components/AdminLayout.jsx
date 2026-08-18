@@ -46,7 +46,7 @@ const AdminLayout = () => {
         </div>
 
         <div className="p-4 border-t border-gray-800 bg-gray-950">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
+          <Link to="/admin-dashboard/settings" className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">
             <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold">
               {user?.name?.charAt(0) || 'A'}
             </div>
@@ -54,7 +54,7 @@ const AdminLayout = () => {
               <p className="text-sm font-bold text-white leading-none">{user?.name || 'Admin User'}</p>
               <p className="text-xs text-gray-500 mt-1">Super Admin</p>
             </div>
-          </div>
+          </Link>
           <button 
             onClick={logout}
             className="flex items-center gap-3 px-4 py-2 w-full text-left rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"

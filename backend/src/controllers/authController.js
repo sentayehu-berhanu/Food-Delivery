@@ -2,6 +2,17 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
+const dbPath = path.join(__dirname, '..', '..', 'users_db.json');
+
+// Helper to read JSON DB
+const readDB = () => {
+  if (!fs.existsSync(dbPath)) {
+    return [];
+  }
+  return JSON.parse(fs.readFileSync(dbPath));
+};
 
 // In-memory store for mock-DB mode
 let mockUsers = [];
@@ -13,18 +24,26 @@ exports.register = async (req, res) => {
 
     // Handle mock-DB mode
     if (mongoose.connection.readyState !== 1) {
-      if (mockUsers.find(u => u.email === email)) {
+      const dbUsers = readDB();
+      if (dbUsers.find(u => u.email === email)) {
         return res.status(400).json({ message: 'User already exists' });
       }
       const userName = email.split('@')[0];
       const newUser = {
-        _id: 'mock-' + Date.now(),
+        _id: Date.now().toString(),
         name: name || (userName.charAt(0).toUpperCase() + userName.slice(1)),
         email,
         password, // stored in plain text for mock purposes
-        role: role || 'CUSTOMER'
+        role: role || (email.includes('driver') ? 'DRIVER' : (email.includes('admin') ? 'ADMIN' : 'CUSTOMER')),
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString()
       };
+      dbUsers.push(newUser);
+      fs.writeFileSync(dbPath, JSON.stringify(dbUsers, null, 2));
+      
+      // Also push to mockUsers to avoid breaking anything else that relies on it
       mockUsers.push(newUser);
+      
       return res.status(201).json({
         _id: newUser._id,
         name: newUser.name,
@@ -72,7 +91,13 @@ exports.login = async (req, res) => {
 
     // Handle mock-DB mode
     if (mongoose.connection.readyState !== 1) {
-      const user = mockUsers.find(u => u.email === email);
+      let user = mockUsers.find(u => u.email === email);
+      
+      if (!user) {
+        const dbUsers = readDB();
+        user = dbUsers.find(u => u.email === email);
+      }
+
       if (user && user.password === password) {
         return res.json({
           _id: user._id,
@@ -122,25 +147,44 @@ exports.resetPassword = async (req, res) => {
 
     // Handle mock-DB mode
     if (mongoose.connection.readyState !== 1) {
-      const userIndex = mockUsers.findIndex(u => u.email === email);
+      const dbUsers = readDB();
+      let userIndex = dbUsers.findIndex(u => u.email === email);
+      
       if (userIndex !== -1) {
-        mockUsers[userIndex].password = newPassword;
-        // Fix role if it was accidentally set to CUSTOMER previously
-        mockUsers[userIndex].role = email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'));
-        return res.json({ message: 'Password reset successful (mock mode)' });
+        dbUsers[userIndex].password = newPassword;
+        dbUsers[userIndex].role = email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'));
       } else {
-        // If not in our mock array, add them so they can login later
         const userName = email.split('@')[0];
         const role = email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'));
-        mockUsers.push({
-          _id: 'mock-' + Date.now(),
+        dbUsers.push({
+          _id: Date.now().toString(),
           name: userName.charAt(0).toUpperCase() + userName.slice(1),
           email: email,
           password: newPassword,
-          role: role
+          role: role,
+          status: 'ACTIVE',
+          createdAt: new Date().toISOString()
         });
-        return res.json({ message: 'Password reset successful (mock mode)' });
       }
+      
+      fs.writeFileSync(dbPath, JSON.stringify(dbUsers, null, 2));
+
+      // Update in-memory array too
+      const mockIndex = mockUsers.findIndex(u => u.email === email);
+      if (mockIndex !== -1) {
+        mockUsers[mockIndex].password = newPassword;
+        mockUsers[mockIndex].role = email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'));
+      } else {
+        mockUsers.push({
+          _id: 'mock-' + Date.now(),
+          name: email.split('@')[0],
+          email: email,
+          password: newPassword,
+          role: email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'))
+        });
+      }
+      
+      return res.json({ message: 'Password reset successful (mock mode)' });
     }
 
     const user = await User.findOne({ email });
