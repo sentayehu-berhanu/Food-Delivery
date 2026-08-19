@@ -119,7 +119,7 @@ const DashboardMenu = () => {
               setFilterStatus(statuses[nextIndex]);
               setCurrentPage(1);
             }}
-            className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition font-medium ${filterStatus !== 'ALL' ? 'bg-gray-900 border-gray-900 text-white' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+            className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition font-medium ${filterStatus !== 'ALL' ? 'bg-gray-900 dark:bg-white border-gray-900 dark:border-white text-white dark:text-gray-900' : 'border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             <Filter size={20} /> <span className="hidden sm:inline">{filterStatus === 'ALL' ? 'Filter' : filterStatus}</span>
           </button>

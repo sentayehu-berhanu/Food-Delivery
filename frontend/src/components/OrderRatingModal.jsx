@@ -103,7 +103,7 @@ const OrderRatingModal = ({ isOpen, onClose, order, onSubmit }) => {
             
             <button 
               onClick={handleNextStep}
-              className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl transition active:scale-95 flex items-center justify-center gap-2"
+              className="w-full bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-gray-900 font-bold py-4 rounded-xl transition active:scale-95 flex items-center justify-center gap-2"
             >
               Next: Rate Driver
             </button>

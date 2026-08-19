@@ -18,6 +18,7 @@ import Subscriptions from './pages/Subscriptions';
 import RescueHub from './pages/RescueHub';
 import Discover from './pages/Discover';
 import CorporatePortal from './pages/CorporatePortal';
+import MysteryBox from './pages/MysteryBox';
 import RestaurantLayout from './components/RestaurantLayout';
 import DashboardHome from './pages/DashboardHome';
 import DashboardOrders from './pages/DashboardOrders';
@@ -68,6 +69,7 @@ function App() {
         <Route path="/rescue" element={<div className="min-h-screen bg-gray-50"><Navbar /><main><RescueHub /></main></div>} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/corporate" element={<CorporatePortal />} />
+        <Route path="/mystery" element={<div className="min-h-screen bg-gray-900"><Navbar /><main><MysteryBox /></main></div>} />
 
         <Route path="/restaurant-dashboard" element={<RestaurantLayout />}>
           <Route index element={<DashboardHome />} />

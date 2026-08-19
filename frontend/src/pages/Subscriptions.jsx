@@ -83,17 +83,17 @@ const Subscriptions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24 pb-24 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       <div className="max-w-6xl mx-auto" ref={containerRef}>
         
         <div className="text-center mb-16">
           <span className="bg-orange-100 text-orange-700 font-bold px-4 py-1.5 rounded-full text-sm inline-block mb-4">
             FoodGo Subscriptions
           </span>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
             Weekly Meal Prep,<br/> Delivered Fresh.
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Choose a plan that fits your lifestyle. We cook and deliver chef-prepared meals to your door every week. Pause or cancel anytime.
           </p>
         </div>
@@ -118,31 +118,31 @@ const Subscriptions = () => {
             <div 
               key={plan.id}
               onClick={() => setSelectedPlan(plan)}
-              className={`bg-white rounded-3xl p-8 cursor-pointer transition-all border-2 relative overflow-hidden ${
+              className={`bg-white dark:bg-slate-800 rounded-3xl p-8 cursor-pointer transition-all border-2 relative overflow-hidden ${
                 selectedPlan.id === plan.id 
                   ? 'border-primary shadow-xl shadow-orange-500/20 scale-105 z-10' 
-                  : 'border-gray-100 shadow-sm hover:border-orange-200 hover:shadow-md'
+                  : 'border-gray-100 dark:border-slate-700 shadow-sm hover:border-orange-200 dark:hover:border-orange-500/50 hover:shadow-md'
               }`}
             >
               {selectedPlan.id === plan.id && (
                 <div className="absolute top-0 inset-x-0 h-1.5 bg-primary"></div>
               )}
               
-              <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-slate-700/50 flex items-center justify-center mb-6">
                 {plan.icon}
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-              <p className="text-gray-500 mb-6 min-h-[48px]">{plan.description}</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 min-h-[48px]">{plan.description}</p>
               
               <div className="mb-6">
-                <span className="text-3xl font-black text-gray-900">${plan.pricePerMeal.toFixed(2)}</span>
-                <span className="text-gray-500"> / meal</span>
+                <span className="text-3xl font-black text-gray-900 dark:text-white">${plan.pricePerMeal.toFixed(2)}</span>
+                <span className="text-gray-500 dark:text-gray-400"> / meal</span>
               </div>
               
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                     <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                     <span>{feature}</span>
                   </li>
@@ -152,7 +152,7 @@ const Subscriptions = () => {
               <div className={`w-full py-3 rounded-xl font-bold text-center transition ${
                 selectedPlan.id === plan.id 
                   ? 'bg-primary text-white' 
-                  : 'bg-gray-100 text-gray-500'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400'
               }`}>
                 {selectedPlan.id === plan.id ? 'Selected' : 'Select Plan'}
               </div>
@@ -161,12 +161,12 @@ const Subscriptions = () => {
         </div>
 
         {/* Configuration Section */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-12 items-center">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col md:flex-row gap-12 items-center">
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-3">
               <Calendar className="text-primary w-8 h-8" /> Customize Your Plan
             </h2>
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 dark:text-gray-300 mb-8">
               How many meals do you want delivered per week? You can pick your specific meals later.
             </p>
             
@@ -177,8 +177,8 @@ const Subscriptions = () => {
                   onClick={() => setMealsPerWeek(num)}
                   className={`py-4 rounded-xl font-bold text-lg transition border-2 ${
                     mealsPerWeek === num 
-                      ? 'border-primary bg-orange-50 text-primary' 
-                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      ? 'border-primary bg-orange-50 dark:bg-orange-900/20 text-primary' 
+                      : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {num} Meals
@@ -187,27 +187,27 @@ const Subscriptions = () => {
             </div>
           </div>
           
-          <div className="w-full md:w-96 bg-gray-50 rounded-3xl p-8 border border-gray-200">
-            <h3 className="font-bold text-gray-900 mb-6">Order Summary</h3>
+          <div className="w-full md:w-96 bg-gray-50 dark:bg-slate-700/30 rounded-3xl p-8 border border-gray-200 dark:border-slate-600">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-6">Order Summary</h3>
             
             <div className="space-y-4 mb-6">
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Plan</span>
-                <span className="font-medium text-gray-900">{selectedPlan.name}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{selectedPlan.name}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Meals per week</span>
-                <span className="font-medium text-gray-900">{mealsPerWeek}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{mealsPerWeek}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Price per meal</span>
-                <span className="font-medium text-gray-900">${selectedPlan.pricePerMeal.toFixed(2)}</span>
+                <span className="font-medium text-gray-900 dark:text-white">${selectedPlan.pricePerMeal.toFixed(2)}</span>
               </div>
             </div>
             
-            <div className="border-t border-gray-200 pt-4 mb-8">
+            <div className="border-t border-gray-200 dark:border-slate-600 pt-4 mb-8">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-gray-900">Weekly Total</span>
+                <span className="font-bold text-gray-900 dark:text-white">Weekly Total</span>
                 <span className="text-2xl font-extrabold text-primary">
                   ${(selectedPlan.pricePerMeal * mealsPerWeek).toFixed(2)}
                 </span>
@@ -220,8 +220,8 @@ const Subscriptions = () => {
               disabled={!!activeSubscription}
               className={`w-full py-4 rounded-xl font-bold transition flex justify-center items-center gap-2 ${
                 activeSubscription 
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gray-900 text-white hover:bg-black shadow-lg shadow-gray-900/30'
+                  ? 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-black dark:hover:bg-gray-100 shadow-lg shadow-gray-900/30 dark:shadow-white/10'
               }`}
             >
               {activeSubscription ? 'Already Subscribed' : 'Subscribe Now'}

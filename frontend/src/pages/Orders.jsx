@@ -180,7 +180,7 @@ const Orders = () => {
                     )}
                     <button 
                       onClick={() => handleReorder(order)}
-                      className="px-6 py-2 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition"
+                      className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition"
                     >
                       Reorder
                     </button>

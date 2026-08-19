@@ -82,27 +82,27 @@ const RescueHub = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9F6] pt-24 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F7F9F6] dark:bg-slate-900 pt-24 pb-24 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       <div className="max-w-6xl mx-auto" ref={containerRef}>
         
         <div className="text-center mb-16">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Leaf className="w-10 h-10 text-green-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
             Food Rescue
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Save perfectly good food from going to waste. Pick up a "Surprise Bag" at the end of the day for a fraction of the price!
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {RESCUE_BAGS.map(bag => (
-            <div key={bag.id} className="bg-white rounded-3xl shadow-sm hover:shadow-md transition border border-gray-100 overflow-hidden flex flex-col">
+            <div key={bag.id} className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-md transition border border-gray-100 dark:border-slate-700 overflow-hidden flex flex-col">
               <div className="h-48 relative">
                 <img src={bag.image} alt={bag.type} className="w-full h-full object-cover" />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-900 flex items-center gap-1 shadow-sm">
+                <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1 shadow-sm">
                   <MapPin size={12} className="text-green-600" /> {bag.distance}
                 </div>
                 {bag.quantityLeft <= 2 && (
@@ -113,20 +113,20 @@ const RescueHub = () => {
               </div>
               
               <div className="p-6 flex-1 flex flex-col">
-                <div className="text-sm font-bold text-gray-500 mb-1">{bag.restaurantName}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{bag.type}</h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{bag.description}</p>
+                <div className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-1">{bag.restaurantName}</div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{bag.type}</h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">{bag.description}</p>
                 
                 <div className="mt-auto">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-4 bg-gray-50 p-2 rounded-xl border border-gray-100">
-                    <Clock size={16} className="text-gray-400" />
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-4 bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl border border-gray-100 dark:border-slate-600">
+                    <Clock size={16} className="text-gray-400 dark:text-gray-500" />
                     <span>Pickup: <strong>{bag.pickupWindow}</strong></span>
                   </div>
                   
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <div className="text-2xl font-black text-green-600">${bag.price.toFixed(2)}</div>
-                      <div className="text-xs text-gray-400 line-through">Value: ${bag.originalValue.toFixed(2)}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 line-through">Value: ${bag.originalValue.toFixed(2)}</div>
                     </div>
                   </div>
                   
@@ -145,10 +145,10 @@ const RescueHub = () => {
         {/* Modal for Confirmation */}
         {selectedBag && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in duration-200">
               <button 
                 onClick={() => setSelectedBag(null)}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition"
               >
                 ✕
               </button>
@@ -157,16 +157,16 @@ const RescueHub = () => {
                 <Leaf className="w-8 h-8 text-green-600" />
               </div>
               
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Reserve Surprise Bag</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Reserve Surprise Bag</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 You are reserving a Surprise Bag from <strong>{selectedBag.restaurantName}</strong>. 
                 Please note that this item is <strong>Pickup Only</strong> and must be picked up between <strong>{selectedBag.pickupWindow}</strong>.
               </p>
               
-              <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 border border-gray-100 dark:border-slate-600">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Total Price</span>
-                  <span className="font-bold text-gray-900">${selectedBag.price.toFixed(2)}</span>
+                  <span className="text-gray-600 dark:text-gray-300">Total Price</span>
+                  <span className="font-bold text-gray-900 dark:text-white">${selectedBag.price.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm text-green-600 font-bold">
                   <span>You save</span>

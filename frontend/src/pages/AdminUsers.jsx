@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Edit2, Trash2, Shield, ShieldOff, Ban, CheckCircle } from 'lucide-react';
+import { Search, Filter, MoreVertical, Edit2, Trash2, Shield, ShieldOff, Ban, CheckCircle, Building2 } from 'lucide-react';
 
 const AdminUsers = () => {
   const [activeTab, setActiveTab] = useState('ALL');
@@ -141,6 +141,7 @@ const AdminUsers = () => {
     switch (role) {
       case 'ADMIN': return <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold flex items-center w-fit gap-1"><Shield size={12}/> Admin</span>;
       case 'DRIVER': return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold w-fit">Driver</span>;
+      case 'CORPORATE': return <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold flex items-center w-fit gap-1"><Building2 size={12}/> Corporate</span>;
       default: return <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-bold w-fit">Customer</span>;
     }
   };
@@ -157,15 +158,15 @@ const AdminUsers = () => {
       {/* Header Actions */}
       <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
         <div className="flex gap-2">
-          {['ALL', 'CUSTOMER', 'DRIVER', 'ADMIN'].map(tab => (
+          {['ALL', 'CUSTOMER', 'DRIVER', 'CORPORATE', 'ADMIN'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                activeTab === tab ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                activeTab === tab ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
               }`}
             >
-              {tab === 'ALL' ? 'All Users' : tab + 'S'}
+              {tab === 'ALL' ? 'All Users' : (tab === 'CORPORATE' ? 'Corporate' : tab + 'S')}
             </button>
           ))}
         </div>
@@ -187,7 +188,7 @@ const AdminUsers = () => {
               else setFilterStatus('ALL');
             }}
             title="Filter by Status"
-            className={`px-3 py-2 border border-gray-200 rounded-lg transition flex items-center gap-2 text-sm font-bold ${filterStatus !== 'ALL' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg transition flex items-center gap-2 text-sm font-bold ${filterStatus !== 'ALL' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             <Filter size={18} />
             {filterStatus !== 'ALL' && filterStatus}
@@ -346,6 +347,7 @@ const AdminUsers = () => {
                   onChange={e => setEditingUser({...editingUser, role: e.target.value})}
                 >
                   <option value="CUSTOMER">Customer</option>
+                  <option value="CORPORATE">Corporate</option>
                   <option value="DRIVER">Driver</option>
                   <option value="ADMIN">Admin</option>
                 </select>

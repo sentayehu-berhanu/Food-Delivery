@@ -68,7 +68,7 @@ const GroupOrderLobby = () => {
             {isHost && !isLocked && (
               <button 
                 onClick={lockOrder}
-                className="flex-1 bg-gray-900 text-white text-xs font-bold py-2 rounded-lg hover:bg-gray-800 transition"
+                className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-bold py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition"
               >
                 Lock Order
               </button>

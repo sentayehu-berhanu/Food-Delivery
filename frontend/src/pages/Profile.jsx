@@ -237,7 +237,7 @@ const Profile = () => {
                 </button>
                 <button 
                   onClick={handleAddAddress}
-                  className="px-4 py-2 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition"
+                  className="px-4 py-2 bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-gray-900 font-bold rounded-xl transition"
                 >
                   Save Address
                 </button>

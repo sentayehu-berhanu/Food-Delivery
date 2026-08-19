@@ -34,7 +34,9 @@ app.get('/', (req, res) => {
 // Database Connection
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 2000
+    });
     console.log('Connected to MongoDB');
   } catch (error) {
     console.log('Local MongoDB not found. Running in mock-DB mode for users...');

@@ -337,25 +337,25 @@ const RestaurantDetails = () => {
             <div className="flex flex-wrap gap-2 mb-6">
               <button 
                 onClick={() => setDietFilter('All')}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${dietFilter === 'All' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${dietFilter === 'All' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
               >
                 All
               </button>
               <button 
                 onClick={() => setDietFilter('Vegan')}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegan' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegan' ? 'bg-green-600 text-white border-green-600' : 'bg-white dark:bg-slate-800 text-green-700 dark:text-green-400 border border-green-200 dark:border-slate-700 hover:bg-green-50 dark:hover:bg-slate-700'}`}
               >
                 <Leaf size={14} /> Vegan
               </button>
               <button 
                 onClick={() => setDietFilter('Vegetarian')}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegetarian' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-green-600 border border-green-200 hover:bg-green-50'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Vegetarian' ? 'bg-green-500 text-white border-green-500' : 'bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 border border-green-200 dark:border-slate-700 hover:bg-green-50 dark:hover:bg-slate-700'}`}
               >
                 <Leaf size={14} /> Vegetarian
               </button>
               <button 
                 onClick={() => setDietFilter('Gluten-Free')}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Gluten-Free' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${dietFilter === 'Gluten-Free' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-slate-700'}`}
               >
                 <WheatOff size={14} /> Gluten-Free
               </button>

@@ -59,6 +59,8 @@ const Login = () => {
           navigate('/admin-dashboard');
         } else if (data.role === 'DRIVER') {
           navigate('/driver-dashboard');
+        } else if (data.role === 'CORPORATE') {
+          navigate('/corporate');
         } else {
           navigate('/');
         }

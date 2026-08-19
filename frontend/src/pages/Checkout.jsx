@@ -403,7 +403,7 @@ const Checkout = () => {
                   />
                   <button 
                     onClick={handleApplyPromo}
-                    className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition"
+                    className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition"
                   >
                     Apply
                   </button>
@@ -618,7 +618,7 @@ const Checkout = () => {
                 setIsBillSplit(true);
                 setShowSplitModal(false);
               }}
-              className="w-full mt-8 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition"
+              className="w-full mt-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition"
             >
               Done
             </button>

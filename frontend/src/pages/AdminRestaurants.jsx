@@ -82,7 +82,7 @@ const AdminRestaurants = () => {
               setFilterStatus(statuses[nextIndex]);
             }}
             title="Filter Status"
-            className={`p-2 border border-gray-200 rounded-lg transition flex items-center gap-2 text-sm font-bold ${filterStatus !== 'ALL' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`p-2 border border-gray-200 dark:border-slate-700 rounded-lg transition flex items-center gap-2 text-sm font-bold ${filterStatus !== 'ALL' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             <Filter size={18} />
             {filterStatus !== 'ALL' && <span className="hidden sm:inline">{getStatusBadge(filterStatus)}</span>}

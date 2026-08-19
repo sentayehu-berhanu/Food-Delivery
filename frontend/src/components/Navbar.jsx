@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, ShoppingCart, User, MapPin, LogOut, Moon, Sun, Wallet, Calendar, History, Leaf, Compass, Building2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, ShoppingCart, User, MapPin, LogOut, Moon, Sun, Wallet, Calendar, History, Leaf, Compass, Building2, Gift, LayoutGrid } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -14,7 +14,19 @@ const Navbar = () => {
   const { deliveryLocation } = useLocationContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreRef.current && !moreRef.current.contains(event.target)) {
+        setIsMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const { isDarkMode, toggleTheme } = useTheme();
 
   const handleSearch = (e) => {
@@ -68,35 +80,54 @@ const Navbar = () => {
           <div className="flex items-center gap-6">
             {user ? (
               <div className="flex items-center gap-4">
-                <Link to="/profile" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary font-semibold transition-colors flex items-center gap-2">
+                <Link to="/profile" className="text-gray-700 dark:text-white hover:text-primary dark:hover:text-rose-400 font-semibold transition-colors flex items-center gap-2">
                   <User size={22} />
                   <span className="hidden sm:inline">{user.name}</span>
                 </Link>
-                <NavLink to="/wallet" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
+                <NavLink to="/wallet" className={({isActive}) => isActive ? "text-primary dark:text-white font-bold transition flex items-center gap-2" : "text-gray-600 dark:text-gray-200 hover:text-primary dark:hover:text-white transition font-bold flex items-center gap-2"}>
                   <Wallet size={18} /> Wallet
                 </NavLink>
-                <NavLink to="/orders" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
+                <NavLink to="/orders" className={({isActive}) => isActive ? "text-primary dark:text-white font-bold transition flex items-center gap-2" : "text-gray-600 dark:text-gray-200 hover:text-primary dark:hover:text-white transition font-bold flex items-center gap-2"}>
                   <History size={18} /> Orders
                 </NavLink>
-                <NavLink to="/subscriptions" className={({isActive}) => isActive ? "text-primary font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-primary transition font-bold flex items-center gap-2"}>
-                  <Calendar size={18} /> Meal Plans
-                </NavLink>
-                <NavLink to="/discover" className={({isActive}) => isActive ? "text-purple-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-purple-600 transition font-bold flex items-center gap-2"}>
-                  <Compass size={18} /> FoodTok
-                </NavLink>
-                <NavLink to="/corporate" className={({isActive}) => isActive ? "text-blue-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-blue-600 transition font-bold flex items-center gap-2"}>
-                  <Building2 size={18} /> Corporate
-                </NavLink>
-                <NavLink to="/rescue" className={({isActive}) => isActive ? "text-green-600 font-bold transition flex items-center gap-2" : "text-gray-600 hover:text-green-600 transition font-bold flex items-center gap-2"}>
-                  <Leaf size={18} /> Zero Waste
-                </NavLink>
-                <button onClick={logout} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                
+                {/* More Dropdown */}
+                <div className="relative" ref={moreRef}>
+                  <button 
+                    onClick={() => setIsMoreOpen(!isMoreOpen)}
+                    className={`flex items-center gap-1 font-bold transition ${isMoreOpen ? 'text-primary dark:text-white' : 'text-gray-600 dark:text-gray-200 hover:text-primary dark:hover:text-white'}`}
+                  >
+                    <LayoutGrid size={18} /> Explore
+                  </button>
+                  
+                  {isMoreOpen && (
+                    <div className="absolute top-full right-0 mt-4 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 py-2 z-50 flex flex-col">
+                      <NavLink onClick={() => setIsMoreOpen(false)} to="/subscriptions" className={({isActive}) => isActive ? "px-4 py-2.5 text-primary dark:text-white font-bold bg-gray-50 dark:bg-slate-700/80 flex items-center gap-2" : "px-4 py-2.5 text-gray-600 dark:text-gray-200 hover:text-primary dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700/80 transition font-medium flex items-center gap-2"}>
+                        <Calendar size={18} /> Meal Plans
+                      </NavLink>
+                      <NavLink onClick={() => setIsMoreOpen(false)} to="/discover" className={({isActive}) => isActive ? "px-4 py-2.5 text-purple-600 dark:text-white font-bold bg-purple-50 dark:bg-slate-700/80 flex items-center gap-2" : "px-4 py-2.5 text-gray-600 dark:text-gray-200 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-slate-700/80 transition font-medium flex items-center gap-2"}>
+                        <Compass size={18} /> FoodTok
+                      </NavLink>
+                      <NavLink onClick={() => setIsMoreOpen(false)} to="/corporate" className={({isActive}) => isActive ? "px-4 py-2.5 text-blue-600 dark:text-white font-bold bg-blue-50 dark:bg-slate-700/80 flex items-center gap-2" : "px-4 py-2.5 text-gray-600 dark:text-gray-200 hover:text-blue-600 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-slate-700/80 transition font-medium flex items-center gap-2"}>
+                        <Building2 size={18} /> Corporate
+                      </NavLink>
+                      <NavLink onClick={() => setIsMoreOpen(false)} to="/mystery" className={({isActive}) => isActive ? "px-4 py-2.5 text-pink-600 dark:text-white font-bold bg-pink-50 dark:bg-slate-700/80 flex items-center gap-2" : "px-4 py-2.5 text-gray-600 dark:text-gray-200 hover:text-pink-600 dark:hover:text-white hover:bg-pink-50 dark:hover:bg-slate-700/80 transition font-medium flex items-center gap-2"}>
+                        <Gift size={18} /> Mystery Box
+                      </NavLink>
+                      <NavLink onClick={() => setIsMoreOpen(false)} to="/rescue" className={({isActive}) => isActive ? "px-4 py-2.5 text-green-600 dark:text-white font-bold bg-green-50 dark:bg-slate-700/80 flex items-center gap-2" : "px-4 py-2.5 text-gray-600 dark:text-gray-200 hover:text-green-600 dark:hover:text-white hover:bg-green-50 dark:hover:bg-slate-700/80 transition font-medium flex items-center gap-2"}>
+                        <Leaf size={18} /> Zero Waste
+                      </NavLink>
+                    </div>
+                  )}
+                </div>
+
+                <button onClick={logout} className="text-gray-400 dark:text-gray-200 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                   <LogOut size={22} />
                 </button>
                 <NotificationDropdown />
               </div>
             ) : (
-              <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-primary font-semibold transition-colors flex items-center gap-2">
+              <Link to="/login" className="text-gray-700 dark:text-white hover:text-primary dark:hover:text-rose-400 font-semibold transition-colors flex items-center gap-2">
                 <User size={22} />
                 <span className="hidden sm:inline">Login</span>
               </Link>
@@ -104,12 +135,12 @@ const Navbar = () => {
             
             <button 
               onClick={toggleTheme} 
-              className="text-gray-700 hover:text-primary transition-colors flex items-center justify-center dark:text-gray-300 dark:hover:text-primary"
+              className="text-gray-700 hover:text-primary transition-colors flex items-center justify-center dark:text-white dark:hover:text-rose-400"
             >
               {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
             </button>
             
-            <Link to="/cart" className="relative p-2.5 text-gray-700 hover:text-primary transition-all bg-white rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-gray-800 dark:text-gray-300">
+            <Link to="/cart" className="relative p-2.5 text-gray-700 hover:text-primary transition-all bg-white rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-gray-800 dark:text-white dark:hover:text-rose-400">
               <ShoppingCart size={24} />
               {itemCount > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary rounded-full shadow-lg">

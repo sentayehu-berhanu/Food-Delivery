@@ -12,9 +12,11 @@ const DriverHome = () => {
     // Pull real mock orders from localStorage (created by Checkout, managed by Restaurant)
     const fetchOrders = () => {
       const savedOrders = JSON.parse(localStorage.getItem('mockLiveOrders') || '[]');
-      // Show orders that the restaurant is preparing or has ready
+      const declinedOrders = JSON.parse(localStorage.getItem('declinedOrderIds') || '[]');
+      
+      // Show orders that the restaurant is preparing or has ready, and haven't been declined
       const driverOrders = savedOrders
-        .filter(o => o.status === 'PENDING' || o.status === 'PREPARING' || o.status === 'READY')
+        .filter(o => (o.status === 'PENDING' || o.status === 'PREPARING' || o.status === 'READY') && !declinedOrders.includes(o.id))
         .map(o => ({
           id: o.id,
           restaurant: { name: o.restaurantEmail?.split('@')[0] || 'Local Restaurant', address: 'Bole, Addis Ababa' },
@@ -32,6 +34,16 @@ const DriverHome = () => {
     const interval = setInterval(fetchOrders, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const declineOrder = (id) => {
+    // Add to declined list so the poller doesn't fetch it again
+    const declined = JSON.parse(localStorage.getItem('declinedOrderIds') || '[]');
+    if (!declined.includes(id)) {
+      declined.push(id);
+      localStorage.setItem('declinedOrderIds', JSON.stringify(declined));
+    }
+    setAvailableOrders(prev => prev.filter(o => o.id !== id));
+  };
 
   const acceptOrder = (id) => {
     // Update the order status in localStorage to PICKED_UP so it leaves the available pool
@@ -106,7 +118,7 @@ const DriverHome = () => {
 
               <div className="flex gap-3">
                 <button 
-                  onClick={() => setAvailableOrders(prev => prev.filter(o => o.id !== order.id))}
+                  onClick={() => declineOrder(order.id)}
                   className="w-1/3 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition"
                 >
                   Decline

@@ -25,7 +25,15 @@ exports.register = async (req, res) => {
     // Handle mock-DB mode
     if (mongoose.connection.readyState !== 1) {
       const dbUsers = readDB();
-      if (dbUsers.find(u => u.email === email)) {
+      const existingUserIndex = dbUsers.findIndex(u => u.email === email);
+      if (existingUserIndex !== -1) {
+        if (role === 'CORPORATE') {
+          dbUsers[existingUserIndex].role = 'CORPORATE';
+          if (password) dbUsers[existingUserIndex].password = password;
+          if (name) dbUsers[existingUserIndex].name = name;
+          fs.writeFileSync(dbPath, JSON.stringify(dbUsers, null, 2));
+          return res.status(200).json(dbUsers[existingUserIndex]);
+        }
         return res.status(400).json({ message: 'User already exists' });
       }
       const userName = email.split('@')[0];
@@ -34,7 +42,7 @@ exports.register = async (req, res) => {
         name: name || (userName.charAt(0).toUpperCase() + userName.slice(1)),
         email,
         password, // stored in plain text for mock purposes
-        role: role || (email.includes('driver') ? 'DRIVER' : (email.includes('admin') ? 'ADMIN' : 'CUSTOMER')),
+        role: role || (email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER'))),
         status: 'ACTIVE',
         createdAt: new Date().toISOString()
       };
@@ -65,7 +73,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || 'CUSTOMER'
+      role: role || (email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER')))
     });
 
     if (user) {
@@ -108,13 +116,14 @@ exports.login = async (req, res) => {
         });
       } else {
         // Fallback for pre-existing test emails if not registered in this session
-        if (!user && password === 'password123') {
+        const allowedTestEmails = ['admin@test.com', 'driver@test.com', 'restaurant@test.com', 'customer@test.com', 'corporate@test.com'];
+        if (!user && password === 'password123' && allowedTestEmails.includes(email.toLowerCase())) {
            const userName = email.split('@')[0];
            return res.json({
              _id: 'mock-user-id',
              name: userName.charAt(0).toUpperCase() + userName.slice(1),
              email: email,
-             role: email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : 'CUSTOMER')),
+             role: email.includes('admin') ? 'ADMIN' : (email.includes('driver') ? 'DRIVER' : (email.includes('restaurant') ? 'RESTAURANT' : (email.includes('corporate') ? 'CORPORATE' : 'CUSTOMER'))),
              token: generateToken('mock-user-id')
            });
         }
